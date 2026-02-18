@@ -27,3 +27,7 @@ Thumbs.db
 mysql_data/
 caddy_data/
 caddy_config/
+
+# EX
+/z-my_sroce
+/xx
