@@ -1,0 +1,13 @@
+{
+    "name": "matsu-net",
+    "version": "1.0.0",
+    "description": "同窓生向けWebシステム - 松.net",
+    "scripts": {
+        "dev": "php artisan serve",
+        "docker:up": "docker-compose up -d",
+        "docker:down": "docker-compose down",
+        "docker:logs": "docker-compose logs -f app"
+    },
+    "author": "松.netプロジェクトチーム",
+    "license": "MIT"
+}

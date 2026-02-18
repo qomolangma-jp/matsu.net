@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # Caddyリバースプロキシ
+  caddy:
+    image: caddy:2-alpine
+    container_name: matsu-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - matsu-network
+    depends_on:
+      - app
+
+  # Laravel PHPアプリケーション
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: matsu-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_HOST=db
+      - DB_DATABASE=matsu_net
+      - DB_USERNAME=matsu_user
+      - DB_PASSWORD=matsu_password
+    networks:
+      - matsu-network
+    depends_on:
+      - db
+
+  # MySQL データベース
+  db:
+    image: mysql:8.0
+    container_name: matsu-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: matsu_net
+      MYSQL_USER: matsu_user
+      MYSQL_PASSWORD: matsu_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # ports:
+    #   - "3306:3306"
+    networks:
+      - matsu-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # phpMyAdmin（データベース管理用）
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: matsu-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: matsu_user
+      PMA_PASSWORD: matsu_password
+    ports:
+      - "8082:80"
+    networks:
+      - matsu-network
+    depends_on:
+      - db
+
+networks:
+  matsu-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  caddy_data:
+  caddy_config:

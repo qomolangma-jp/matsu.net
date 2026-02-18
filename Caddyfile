@@ -1,0 +1,3 @@
+http://matsu.localhost {
+    reverse_proxy matsu-app:80
+}
