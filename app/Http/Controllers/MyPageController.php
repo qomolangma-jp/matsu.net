@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\News;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,13 +18,34 @@ class MyPageController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        
+        $user = Auth::user()?->fresh();
+
         if (!$user) {
             return redirect()->route('register.form');
         }
-        
-        return view('mypage.index', compact('user'));
+
+        // 公開済みニュース（自分の卒業年度対象 or 全体向け）を新しい順に5件
+        $news = News::where('published_at', '<=', now())
+            ->where(function ($q) use ($user) {
+                $q->whereNull('target_graduation_years')
+                  ->orWhereJsonContains('target_graduation_years', (string) $user->graduation_year);
+            })
+            ->orderByDesc('published_at')
+            ->limit(5)
+            ->get();
+
+        // 公開済みイベント（自分の卒業年度対象 or 全体向け）を開催日順に5件
+        $events = Event::where('is_published', true)
+            ->where('event_date', '>=', now())
+            ->where(function ($q) use ($user) {
+                $q->whereNull('graduation_year')
+                  ->orWhere('graduation_year', $user->graduation_year);
+            })
+            ->orderBy('event_date')
+            ->limit(5)
+            ->get();
+
+        return view('mypage.index', compact('user', 'news', 'events'));
     }
 
     /**
@@ -30,7 +53,7 @@ class MyPageController extends Controller
      */
     public function edit()
     {
-        $user = Auth::user();
+        $user = Auth::user()?->fresh();
         
         if (!$user) {
             return redirect()->route('register.form');

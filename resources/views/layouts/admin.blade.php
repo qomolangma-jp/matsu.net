@@ -172,12 +172,12 @@
             <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
                 <div>
-                    <div class="small">{{ Auth::user()->full_name }}</div>
+                    <div class="small">{{ Auth::user()?->full_name }}</div>
                     <div class="small opacity-75">
-                        @if(Auth::user()->role === 'master_admin')
+                        @if(Auth::user()?->role === 'master_admin')
                             マスター管理者
-                        @elseif(Auth::user()->role === 'year_admin')
-                            学年管理者 ({{ Auth::user()->graduation_year }}年)
+                        @elseif(Auth::user()?->role === 'year_admin')
+                            学年管理者 ({{ Auth::user()?->graduation_year }}年)
                         @else
                             一般ユーザー
                         @endif

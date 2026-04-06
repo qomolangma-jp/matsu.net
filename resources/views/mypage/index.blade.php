@@ -183,15 +183,51 @@
             </div>
         </div>
 
-        <!-- お知らせ・イベント情報（将来的な拡張用） -->
+        <!-- お知らせ・イベント情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-newspaper"></i> 最新のお知らせ
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                @forelse($news as $item)
+                    <div class="px-3 py-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <strong>{{ $item->title }}</strong>
+                            <small class="text-muted ms-2 text-nowrap">{{ $item->published_at->format('Y/m/d') }}</small>
+                        </div>
+                        <div class="text-muted small mt-1">{{ Str::limit($item->body, 100) }}</div>
+                    </div>
+                @empty
+                    <p class="text-muted p-3 mb-0">現在、お知らせはありません。</p>
+                @endforelse
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="bi bi-bell"></i> 最新情報
+                    <i class="bi bi-calendar-event"></i> 今後のイベント
                 </h5>
             </div>
-            <div class="card-body">
-                <p class="text-muted">現在、お知らせはありません。</p>
+            <div class="card-body p-0">
+                @forelse($events as $event)
+                    <div class="px-3 py-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <strong>{{ $event->title }}</strong>
+                            <small class="text-muted ms-2 text-nowrap">{{ $event->event_date->format('Y/m/d') }}</small>
+                        </div>
+                        @if($event->location)
+                            <div class="text-muted small mt-1"><i class="bi bi-geo-alt"></i> {{ $event->location }}</div>
+                        @endif
+                        @if($event->deadline)
+                            <div class="text-muted small"><i class="bi bi-clock"></i> 申込締切：{{ $event->deadline->format('Y/m/d') }}</div>
+                        @endif
+                    </div>
+                @empty
+                    <p class="text-muted p-3 mb-0">現在、予定されているイベントはありません。</p>
+                @endforelse
             </div>
         </div>
     </div>

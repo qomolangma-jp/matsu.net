@@ -1,3 +1,7 @@
 http://matsu.localhost {
     reverse_proxy matsu-app:80
 }
+
+http://casmen.localhost {
+    reverse_proxy casmen-laravel.test-1:80
+}

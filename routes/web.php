@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\NewsController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\ReferenceRosterController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\LoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,9 +22,14 @@ Route::get('/', function () {
     return redirect()->route('register.form');
 });
 
+// 管理者ログイン
+Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('admin.login.form');
+Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login');
+Route::post('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
+
 // ログイン画面（デフォルトリダイレクト用）
 Route::get('/login', function () {
-    return redirect()->route('test.login.form');
+    return redirect()->route('admin.login.form');
 })->name('login');
 
 // 新規登録画面
@@ -37,11 +43,6 @@ Route::get('/register/complete', function () {
     return view('register-complete');
 })->name('register.complete');
 
-// テストログイン（開発環境専用）
-Route::get('/test-login', function () {
-    return view('test-login');
-})->name('test.login.form');
-
 // 自動ログインテスト（開発環境専用）
 Route::get('/test-auto-login', function () {
     if (config('app.env') !== 'local') {
@@ -50,25 +51,11 @@ Route::get('/test-auto-login', function () {
     return view('test-auto-login');
 })->name('test.auto.login');
 
-Route::post('/test-login', function (\Illuminate\Http\Request $request) {
-    $user = \App\Models\User::where('email', $request->email)->first();
-    
-    if (!$user) {
-        return back()->with('error', 'ユーザーが見つかりません');
-    }
-    
-    if (!in_array($user->role, ['master_admin', 'year_admin'])) {
-        return back()->with('error', '管理者権限がありません');
-    }
-    
-    Auth::login($user);
-    
-    return redirect()->route('admin.users.index');
-})->name('test.login');
-
-Route::post('/logout', function () {
+Route::post('/logout', function (\Illuminate\Http\Request $request) {
     Auth::logout();
-    return redirect()->route('test.login.form');
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect()->route('admin.login.form');
 })->name('logout');
 
 // マイページ（全ユーザーアクセス可）
