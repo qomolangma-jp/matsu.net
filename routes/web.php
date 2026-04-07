@@ -22,6 +22,12 @@ use App\Http\Controllers\Admin\SettingController;
 
 // トップページ
 Route::get('/', function () {
+    // LINEログイン後のリダイレクト先（?liff.state=...&code=... が付いている場合）
+    // LIFF SDKが認証コードを処理するために、ここで liff.init() を実行してから SDK に /register へ誘導させる
+    if (request()->has('liff.state')) {
+        $liffId = config('services.line.liff_id');
+        return response(view('liff-redirect', ['liffId' => $liffId]));
+    }
     return redirect()->route('register.form');
 });
 
