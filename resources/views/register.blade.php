@@ -45,8 +45,8 @@
                             @enderror
                         </div>
                     @else
-                        <!-- 本番環境：LIFF経由で自動取得 -->
-                        <input type="hidden" name="line_id" id="lineId" value="">
+                        <!-- 本番環境：LIFF経由で自動取得（/auth/line から引き継ぎも可） -->
+                        <input type="hidden" name="line_id" id="lineId" value="{{ $lineId ?? '' }}">
                     @endif
 
                     <!-- LIFF デバッグ表示（ローカル・本番共通） -->

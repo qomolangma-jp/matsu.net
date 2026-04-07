@@ -56,7 +56,48 @@ class RegisterController extends Controller
             return view('register-closed', compact('message'));
         }
 
-        return view('register');
+        // /auth/line から引き継いだ line_id（未登録ユーザー）
+        $lineId = $request->input('line_id', '');
+
+        return view('register', compact('lineId'));
+    }
+
+    /**
+     * LIFF LINE ID チェック（本番・ローカル共通）
+     * JS が LINE ID 取得後にここへリダイレクト。
+     * - 既存ユーザー → 自動ログイン → マイページ（または管理画面）
+     * - 未登録       → 登録フォームへ（line_id をクエリに引き継ぐ）
+     */
+    public function authWithLine(Request $request)
+    {
+        $lineId = $request->input('line_id');
+
+        if (!$lineId) {
+            return redirect()->route('register.form');
+        }
+
+        $existingUser = User::where('line_id', $lineId)->first();
+
+        if ($existingUser) {
+            Auth::login($existingUser);
+
+            Log::info('LIFF：既存ユーザーを自動ログイン', [
+                'line_id' => $lineId,
+                'user_id' => $existingUser->id,
+                'name'    => $existingUser->full_name,
+            ]);
+
+            if (in_array($existingUser->role, ['master_admin', 'year_admin'])) {
+                return redirect()->route('admin.users.index')
+                    ->with('success', "おかえりなさい、{$existingUser->full_name}さん");
+            }
+
+            return redirect()->route('mypage.index')
+                ->with('success', "おかえりなさい、{$existingUser->full_name}さん");
+        }
+
+        // 未登録：登録フォームへ（line_id を引き継ぐ）
+        return redirect()->route('register.form', ['line_id' => $lineId]);
     }
 
     /**

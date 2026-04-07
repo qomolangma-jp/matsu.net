@@ -129,12 +129,19 @@ window.onload = async function() {
     }
 
     // LINE ID取得完了まで送信ボタンを無効化
+    // ただし /auth/line から戻ってきた場合（hidden に値あり）はスキップ
+    const existingLineId = document.getElementById('lineId')?.value;
+    if (existingLineId) {
+        setStatus('✅ <b>LINE ID確認済み</b>: <code>' + existingLineId + '</code>', 'success');
+        return;
+    }
+
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.dataset.originalText = submitBtn.textContent;
         submitBtn.textContent = 'LINE ID取得中...';
     }
-    setStatus('⏳ <b>LIFF初期化中...</b> (ID: ' + liffId + ')', 'info');
+    setStatus('⏳ <b>LIFF初期化中...</b>', 'info');
 
     try {
         await liff.init({ liffId: liffId });
@@ -159,11 +166,10 @@ window.onload = async function() {
         setStatus('✅ <b>LINE ID取得成功！</b><br>userId: <code>' + profile.userId + '</code><br>displayName: ' + profile.displayName, 'success');
         console.log('LINE User ID:', profile.userId);
 
-        // 送信ボタンを有効化
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = submitBtn.dataset.originalText || '登録する';
-        }
+        // 既存ユーザーチェック：/auth/line へ渡してサーバー側で判定
+        // 既存ユーザー → 自動ログイン → マイページ
+        // 未登録     → 登録フォームに line_id を引き継いで戻ってくる
+        window.location.href = '/auth/line?line_id=' + encodeURIComponent(profile.userId);
 
     } catch (err) {
         setStatus('❌ <b>エラー: ' + err.message + '</b>', 'error');

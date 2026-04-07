@@ -41,6 +41,9 @@ Route::get('/login', function () {
 // 新規登録画面
 Route::get('/register', [RegisterController::class, 'showForm'])->name('register.form');
 
+// LIFF LINE ID チェック：既存ユーザーなら自動ログイン、未登録ならそのまま登録画面へ
+Route::get('/auth/line', [RegisterController::class, 'authWithLine'])->name('auth.line');
+
 // 新規登録処理（LIFF経由）
 Route::post('/register', [RegisterController::class, 'store'])->name('register.submit');
 
