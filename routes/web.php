@@ -26,6 +26,9 @@ Route::get('/', function () {
 });
 
 // 管理者ログイン
+Route::get('/admin', function () {
+    return redirect()->route('admin.login.form');
+});
 Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('admin.login.form');
 Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login');
 Route::post('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
