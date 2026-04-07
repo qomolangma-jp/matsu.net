@@ -217,7 +217,7 @@
 
                     <!-- 送信ボタン -->
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">
                             登録する
                         </button>
                     </div>

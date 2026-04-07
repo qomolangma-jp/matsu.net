@@ -55,6 +55,7 @@ function initializeLocalAutoLogin() {
 
 window.onload = async function() {
     const status = document.getElementById('liff-status');
+    const submitBtn = document.getElementById('submitBtn');
 
     // 生年月日変更時のイベント
     const birthDateInput = document.getElementById('birthDate');
@@ -73,12 +74,22 @@ window.onload = async function() {
         }
     });
 
-    // フォーム送信前バリデーション（卒業年度）
+    // フォーム送信前バリデーション
     document.getElementById('registerForm')?.addEventListener('submit', function(e) {
         const graduationYear = document.getElementById('graduationYear')?.value;
         if (!graduationYear) {
             e.preventDefault();
             alert('卒業年度を選択してください');
+            return;
+        }
+        // 本番環境：LINE IDが取得できていなければ送信を止める
+        if (!isLocalEnvironment()) {
+            const lineId = document.getElementById('lineId')?.value;
+            if (!lineId) {
+                e.preventDefault();
+                alert('LINE IDを取得中です。しばらくお待ちください。');
+                return;
+            }
         }
     });
 
@@ -93,6 +104,14 @@ window.onload = async function() {
         if (status) status.innerText = 'LIFF ID未設定';
         return;
     }
+
+    // LINE ID取得完了まで送信ボタンを無効化
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.dataset.originalText = submitBtn.textContent;
+        submitBtn.textContent = 'LINE ID取得中...';
+    }
+    if (status) status.innerText = 'LINEログイン情報を確認中...';
 
     try {
         await liff.init({ liffId: liffId });
@@ -110,10 +129,23 @@ window.onload = async function() {
 
         if (status) status.innerText = 'LINE ID: ' + profile.userId;
 
-        checkExistingUser(profile.userId);
+        // 送信ボタンを有効化
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = submitBtn.dataset.originalText || '登録する';
+        }
+
+        // ローカル環境と違い、本番では既存ユーザーチェックのリダイレクトは行わない
+        // LINE ID は hidden input にセット済みのため、そのままフォーム入力へ進む
+
     } catch (err) {
         if (status) status.innerText = '初期化エラー: ' + err.message;
         console.error('LIFF初期化エラー:', err);
+        // エラー時も送信ボタンを戻す（再試行できるよう）
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = submitBtn.dataset.originalText || '登録する';
+        }
     }
 };
 
