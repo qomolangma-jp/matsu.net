@@ -20,18 +20,12 @@ use App\Http\Controllers\Admin\SettingController;
 |--------------------------------------------------------------------------
 */
 
-// トップページ
+// トップページ（LIFF エンドポイント）
+// LIFF のエンドポイント URL が https://matsu.qomolangma.jp/ に設定されているため、
+// ここで liff.init() を実行させてから SDK に /register へナビゲートさせる。
+// 外部ブラウザの認証コールバック（?liff.state=...）も、LINE 内ブラウザの直接アクセスも両方対応。
 Route::get('/', function () {
-    // PHP はクエリパラメータ名のドットをアンダースコアに変換するため
-    // ?liff.state=... は $_GET['liff_state'] になる
-    // さらに生のクエリ文字列でも確認する（確実な検出のため）
-    $qs = $_SERVER['QUERY_STRING'] ?? '';
-    $hasLiffState = request()->has('liff_state') || str_contains($qs, 'liff.state');
-
-    if ($hasLiffState) {
-        return view('liff-redirect', ['liffId' => config('services.line.liff_id')]);
-    }
-    return redirect()->route('register.form');
+    return view('liff-redirect', ['liffId' => config('services.line.liff_id')]);
 });
 
 // 管理者ログイン

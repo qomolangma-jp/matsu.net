@@ -20,16 +20,25 @@
     <script>
         liff.init({ liffId: '{{ $liffId }}' })
             .then(function() {
-                // liff.init() が liff.state の値（/register）へ自動リダイレクトする
-                // 5秒経っても遷移しない場合はフォールバック
-                setTimeout(function() {
-                    window.location.href = '/register';
-                }, 5000);
+                // liff.state がある場合（外部ブラウザ認証コールバック）:
+                //   SDK が自動的に liff.state の URL（/register）へ遷移する
+                // liff.state がない場合（LINE 内ブラウザからの直接アクセス）:
+                //   手動で /register へ遷移する
+                if (!liff.isInClient() || !liff.getContext()?.liffId) {
+                    // 外部ブラウザの場合、SDK が自動遷移するので少し待つ
+                    setTimeout(function() {
+                        window.location.replace('/register');
+                    }, 2000);
+                } else {
+                    // LINE 内ブラウザ：すぐ /register へ
+                    window.location.replace('/register');
+                }
             })
             .catch(function(err) {
-                document.querySelector('.box').innerHTML =
-                    '<p style="color:#c0392b">ログインエラー: ' + err.message + '</p>' +
-                    '<a href="/register">登録ページへ戻る</a>';
+                document.querySelector('.box p').textContent = 'LINEログインエラー: ' + err.message;
+                setTimeout(function() {
+                    window.location.replace('/register');
+                }, 3000);
             });
     </script>
 </body>
