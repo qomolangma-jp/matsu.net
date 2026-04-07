@@ -2,6 +2,55 @@
  * 松.net - 新規登録フォーム JavaScript
  */
 
+// ========== 画面ログ（LIFF内では console が見えないため） ==========
+(function () {
+    const panel = document.createElement('div');
+    panel.id = 'debug-panel';
+    panel.style.cssText = [
+        'position:fixed', 'bottom:0', 'left:0', 'right:0',
+        'max-height:40vh', 'overflow-y:auto',
+        'background:rgba(0,0,0,0.85)', 'color:#0f0',
+        'font-size:11px', 'font-family:monospace',
+        'padding:6px 8px', 'z-index:99999',
+        'white-space:pre-wrap', 'word-break:break-all',
+    ].join(';');
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.appendChild(panel);
+    });
+
+    function appendLog(label, args, color) {
+        const line = document.createElement('div');
+        line.style.color = color;
+        const ts = new Date().toISOString().substr(11, 12);
+        const msg = Array.from(args).map(function (a) {
+            try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+            catch (e) { return String(a); }
+        }).join(' ');
+        line.textContent = '[' + ts + '] ' + label + ' ' + msg;
+        panel.appendChild(line);
+        panel.scrollTop = panel.scrollHeight;
+    }
+
+    const _log   = console.log.bind(console);
+    const _warn  = console.warn.bind(console);
+    const _error = console.error.bind(console);
+    console.log   = function () { _log.apply(console, arguments);   appendLog('LOG',   arguments, '#0f0'); };
+    console.warn  = function () { _warn.apply(console, arguments);  appendLog('WARN',  arguments, '#ff0'); };
+    console.error = function () { _error.apply(console, arguments); appendLog('ERR',   arguments, '#f55'); };
+
+    window.addEventListener('error', function (e) {
+        appendLog('UNCAUGHT', [e.message + ' (' + e.filename + ':' + e.lineno + ')'], '#f55');
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+        appendLog('PROMISE', [e.reason], '#f55');
+    });
+
+    console.log('=== debug panel ready ===');
+    console.log('URL:', window.location.href);
+    console.log('UA:', navigator.userAgent.substr(0, 80));
+})();
+// ===================================================================
+
 function setStatus(msg, type) {
     const el = document.getElementById('liff-status');
     if (!el) return;
