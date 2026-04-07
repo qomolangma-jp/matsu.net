@@ -47,6 +47,7 @@
                     @else
                         <!-- 本番環境：LIFF経由で自動取得 -->
                         <input type="hidden" name="line_id" id="lineId" value="">
+                        <div id="liff-status" style="text-align:center;margin-top:4px;color:#666;font-size:0.9em;"></div>
                     @endif
 
                     <!-- 氏名（姓） -->
@@ -235,6 +236,9 @@
 @endsection
 
 @push('scripts')
+<script>
+window.LIFF_ID = "{{ config('services.line.liff_id') }}";
+</script>
 <script src="{{ asset('js/register.js') }}"></script>
 <script>
 (function () {
