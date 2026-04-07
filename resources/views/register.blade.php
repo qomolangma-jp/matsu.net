@@ -241,7 +241,7 @@
 <script>
 window.LIFF_ID = "{{ config('services.line.liff_id') }}";
 </script>
-<script src="{{ asset('js/register.js') }}"></script>
+<script src="{{ asset('js/register.js') }}?v={{ time() }}"></script>
 <script>
 (function () {
     const yearSel  = document.getElementById('birthYear');

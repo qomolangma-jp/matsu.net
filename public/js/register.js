@@ -129,7 +129,8 @@ window.onload = async function() {
 
     console.log('=== window.onload fired ===');
     console.log('LIFF_ID:', window.LIFF_ID);
-    console.log('lineId input value:', document.getElementById('lineId')?.value);
+    var _lineIdEl = document.getElementById('lineId');
+    console.log('lineId input value:', _lineIdEl ? _lineIdEl.value : '(none)');
     console.log('isLocal:', isLocalEnvironment());
 
     // 生年月日変更時のイベント
@@ -140,23 +141,33 @@ window.onload = async function() {
         });
     }
 
-    // 郵便番号検索ボタン
-    document.getElementById('searchAddressBtn')?.addEventListener('click', searchAddressByPostalCode);
-    document.getElementById('postalCode')?.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            searchAddressByPostalCode();
-        }
-    });
+    const searchAddressBtn = document.getElementById('searchAddressBtn');
+    if (searchAddressBtn) {
+        searchAddressBtn.addEventListener('click', searchAddressByPostalCode);
+    }
+    const postalCodeEl = document.getElementById('postalCode');
+    if (postalCodeEl) {
+        postalCodeEl.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchAddressByPostalCode();
+            }
+        });
+    }
 
     // フォーム送信前バリデーション
-    document.getElementById('registerForm')?.addEventListener('submit', function(e) {
-        const graduationYear = document.getElementById('graduationYear')?.value;
-        if (!graduationYear) {
-            e.preventDefault();
-            alert('卒業年度を選択してください');
-            return;
-        }
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            const gradYearEl = document.getElementById('graduationYear');
+            const graduationYear = gradYearEl ? gradYearEl.value : '';
+            if (!graduationYear) {
+                e.preventDefault();
+                alert('卒業年度を選択してください');
+                return;
+            }
+        });
+    } }
     });
 
     if (isLocalEnvironment()) {
@@ -189,7 +200,8 @@ window.onload = async function() {
 
     // LINE ID取得完了まで送信ボタンを無効化
     // ただし /auth/line から戻ってきた場合（hidden に値あり）はスキップ
-    const existingLineId = document.getElementById('lineId')?.value;
+    const lineIdEl2 = document.getElementById('lineId');
+    const existingLineId = lineIdEl2 ? lineIdEl2.value : '';
     if (existingLineId) {
         setStatus('✅ <b>LINE ID確認済み</b>: <code>' + existingLineId + '</code>', 'success');
         return;
