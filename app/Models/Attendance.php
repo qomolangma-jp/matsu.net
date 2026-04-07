@@ -13,7 +13,9 @@ class Attendance extends Model
         'event_id',
         'user_id',
         'status',
-        'note',
+        'guests_count',
+        'remarks',
+        'responded_at',
     ];
 
     protected $casts = [

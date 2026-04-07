@@ -14,19 +14,19 @@ class Event extends Model
         'title',
         'description',
         'event_date',
-        'event_location',
-        'registration_deadline',
-        'max_participants',
-        'target_graduation_year',
+        'location',
+        'deadline',
+        'capacity',
+        'graduation_year',
         'created_by',
         'is_published',
     ];
 
     protected $casts = [
         'event_date' => 'datetime',
-        'registration_deadline' => 'datetime',
-        'max_participants' => 'integer',
-        'target_graduation_year' => 'integer',
+        'deadline' => 'datetime',
+        'capacity' => 'integer',
+        'graduation_year' => 'integer',
         'is_published' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -72,20 +72,14 @@ class Event extends Model
      */
     public function scopeAllYears($query)
     {
-        return $query->whereNull('target_graduation_year');
+        return $query->whereNull('graduation_year');
     }
 
-    /**
-     * 特定学年のイベント
-     */
     public function scopeByGraduationYear($query, $graduationYear)
     {
-        return $query->where('target_graduation_year', $graduationYear);
+        return $query->where('graduation_year', $graduationYear);
     }
 
-    /**
-     * 権限に応じたイベント取得
-     */
     public function scopeFilterByPermission($query, User $user)
     {
         if ($user->role === 'master_admin') {
@@ -94,43 +88,33 @@ class Event extends Model
 
         if ($user->role === 'year_admin') {
             return $query->where(function($q) use ($user) {
-                $q->whereNull('target_graduation_year')
-                  ->orWhere('target_graduation_year', $user->graduation_year);
+                $q->whereNull('graduation_year')
+                  ->orWhere('graduation_year', $user->graduation_year);
             });
         }
 
-        // 一般ユーザーの場合
         return $query->where(function($q) use ($user) {
-            $q->whereNull('target_graduation_year')
-              ->orWhere('target_graduation_year', $user->graduation_year);
+            $q->whereNull('graduation_year')
+              ->orWhere('graduation_year', $user->graduation_year);
         })->published();
     }
 
-    /**
-     * 出席者数
-     */
     public function getAttendingCountAttribute()
     {
         return $this->attendances()->where('status', 'attending')->count();
     }
 
-    /**
-     * 欠席者数
-     */
     public function getAbsentCountAttribute()
     {
         return $this->attendances()->where('status', 'absent')->count();
     }
 
-    /**
-     * 未回答者数（対象ユーザー - 回答済み）
-     */
     public function getPendingCountAttribute()
     {
         $targetUsers = User::approved();
 
-        if ($this->target_graduation_year) {
-            $targetUsers = $targetUsers->where('graduation_year', $this->target_graduation_year);
+        if ($this->graduation_year) {
+            $targetUsers = $targetUsers->where('graduation_year', $this->graduation_year);
         }
 
         $totalTarget = $targetUsers->count();
@@ -139,31 +123,22 @@ class Event extends Model
         return max(0, $totalTarget - $responded);
     }
 
-    /**
-     * 募集締切チェック
-     */
     public function getIsClosedAttribute()
     {
-        return $this->registration_deadline && now()->isAfter($this->registration_deadline);
+        return $this->deadline && now()->isAfter($this->deadline);
     }
 
-    /**
-     * 定員チェック
-     */
     public function getIsFullAttribute()
     {
-        return $this->max_participants && $this->attending_count >= $this->max_participants;
+        return $this->capacity && $this->attending_count >= $this->capacity;
     }
 
-    /**
-     * 対象学年表示
-     */
     public function getTargetYearDisplayAttribute()
     {
-        if (!$this->target_graduation_year) {
+        if (!$this->graduation_year) {
             return '全体同窓会';
         }
 
-        return "{$this->target_graduation_year}年（" . ($this->target_graduation_year - 1947) . "回期）";
+        return "{$this->graduation_year}年（" . ($this->graduation_year - 1947) . "回期）";
     }
 }

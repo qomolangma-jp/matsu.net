@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\ReferenceRoster;
+use App\Models\Setting;
 use App\Mail\ApprovalRequestMail;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Http\Request;
@@ -49,6 +50,12 @@ class RegisterController extends Controller
             }
         }
         
+        // 登録受付停止チェック
+        if (!Setting::get('registration_open', true)) {
+            $message = Setting::get('registration_closed_message', '現在、新規登録の受付を停止しています。');
+            return view('register-closed', compact('message'));
+        }
+
         return view('register');
     }
 

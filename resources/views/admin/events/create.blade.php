@@ -59,14 +59,14 @@
 
                         <!-- 開催場所 -->
                         <div class="col-md-6 mb-3">
-                            <label for="event_location" class="form-label">開催場所</label>
+                            <label for="location" class="form-label">開催場所</label>
                             <input type="text" 
-                                   class="form-control @error('event_location') is-invalid @enderror" 
-                                   id="event_location" 
-                                   name="event_location" 
-                                   value="{{ old('event_location') }}" 
+                                   class="form-control @error('location') is-invalid @enderror" 
+                                   id="location" 
+                                   name="location" 
+                                   value="{{ old('location') }}" 
                                    placeholder="例：東京プリンスホテル">
-                            @error('event_location')
+                            @error('location')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -75,28 +75,28 @@
                     <div class="row">
                         <!-- 募集締切 -->
                         <div class="col-md-6 mb-3">
-                            <label for="registration_deadline" class="form-label">募集締切日</label>
+                            <label for="deadline" class="form-label">募集締切日</label>
                             <input type="datetime-local" 
-                                   class="form-control @error('registration_deadline') is-invalid @enderror" 
-                                   id="registration_deadline" 
-                                   name="registration_deadline" 
-                                   value="{{ old('registration_deadline') }}">
-                            @error('registration_deadline')
+                                   class="form-control @error('deadline') is-invalid @enderror" 
+                                   id="deadline" 
+                                   name="deadline" 
+                                   value="{{ old('deadline') }}">
+                            @error('deadline')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <!-- 定員 -->
                         <div class="col-md-6 mb-3">
-                            <label for="max_participants" class="form-label">定員</label>
+                            <label for="capacity" class="form-label">定員</label>
                             <input type="number" 
-                                   class="form-control @error('max_participants') is-invalid @enderror" 
-                                   id="max_participants" 
-                                   name="max_participants" 
-                                   value="{{ old('max_participants') }}" 
+                                   class="form-control @error('capacity') is-invalid @enderror" 
+                                   id="capacity" 
+                                   name="capacity" 
+                                   value="{{ old('capacity') }}" 
                                    min="1"
                                    placeholder="未入力の場合、定員なし">
-                            @error('max_participants')
+                            @error('capacity')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -104,15 +104,15 @@
 
                     <!-- 対象学年 -->
                     <div class="mb-3">
-                        <label for="target_graduation_year" class="form-label">対象学年</label>
+                        <label for="graduation_year" class="form-label">対象学年</label>
                         
                         @if(Auth::user()->role === 'master_admin')
-                            <select class="form-select @error('target_graduation_year') is-invalid @enderror" 
-                                    id="target_graduation_year" 
-                                    name="target_graduation_year">
+                            <select class="form-select @error('graduation_year') is-invalid @enderror" 
+                                    id="graduation_year" 
+                                    name="graduation_year">
                                 <option value="">全体同窓会（全学年対象）</option>
                                 @foreach($graduationYears as $year)
-                                    <option value="{{ $year }}" {{ old('target_graduation_year') == $year ? 'selected' : '' }}>
+                                    <option value="{{ $year }}" {{ old('graduation_year') == $year ? 'selected' : '' }}>
                                         {{ $year }}年（{{ $year - 1947 }}回期）
                                     </option>
                                 @endforeach
@@ -125,10 +125,10 @@
                                 <i class="bi bi-info-circle"></i> 
                                 学年管理者は自学年（{{ Auth::user()->graduation_year }}年）のイベントのみ作成できます
                             </div>
-                            <input type="hidden" name="target_graduation_year" value="{{ Auth::user()->graduation_year }}">
+                            <input type="hidden" name="graduation_year" value="{{ Auth::user()->graduation_year }}">
                         @endif
                         
-                        @error('target_graduation_year')
+                        @error('graduation_year')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

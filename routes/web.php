@@ -4,12 +4,15 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\MyPageController;
+use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\NewsController;
-use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\NewsController as AdminNewsController;
+use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\Admin\ReferenceRosterController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\LoginController;
+use App\Http\Controllers\Admin\SettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,6 +68,19 @@ Route::middleware(['auth'])->prefix('mypage')->name('mypage.')->group(function (
     Route::put('/update', [MyPageController::class, 'update'])->name('update');
 });
 
+// お知らせ（ログインユーザー向け）
+Route::middleware(['auth'])->prefix('news')->name('news.')->group(function () {
+    Route::get('/', [NewsController::class, 'index'])->name('index');
+    Route::get('/{news}', [NewsController::class, 'show'])->name('show');
+});
+
+// イベント（ログインユーザー向け）
+Route::middleware(['auth'])->prefix('events')->name('events.')->group(function () {
+    Route::get('/', [EventController::class, 'index'])->name('index');
+    Route::get('/{event}', [EventController::class, 'show'])->name('show');
+    Route::post('/{event}/respond', [EventController::class, 'respond'])->name('respond');
+});
+
 // 管理者用ルート
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     // 名簿管理
@@ -79,24 +95,24 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
     // ニュース管理
     Route::prefix('news')->name('news.')->group(function () {
-        Route::get('/', [NewsController::class, 'index'])->name('index');
-        Route::get('/create', [NewsController::class, 'create'])->name('create');
-        Route::post('/', [NewsController::class, 'store'])->name('store');
-        Route::get('/{news}/edit', [NewsController::class, 'edit'])->name('edit');
-        Route::put('/{news}', [NewsController::class, 'update'])->name('update');
-        Route::delete('/{news}', [NewsController::class, 'destroy'])->name('destroy');
+        Route::get('/', [AdminNewsController::class, 'index'])->name('index');
+        Route::get('/create', [AdminNewsController::class, 'create'])->name('create');
+        Route::post('/', [AdminNewsController::class, 'store'])->name('store');
+        Route::get('/{news}/edit', [AdminNewsController::class, 'edit'])->name('edit');
+        Route::put('/{news}', [AdminNewsController::class, 'update'])->name('update');
+        Route::delete('/{news}', [AdminNewsController::class, 'destroy'])->name('destroy');
     });
 
     // イベント管理
     Route::prefix('events')->name('events.')->group(function () {
-        Route::get('/', [EventController::class, 'index'])->name('index');
-        Route::get('/create', [EventController::class, 'create'])->name('create');
-        Route::post('/', [EventController::class, 'store'])->name('store');
-        Route::get('/{event}', [EventController::class, 'show'])->name('show');
-        Route::get('/{event}/edit', [EventController::class, 'edit'])->name('edit');
-        Route::put('/{event}', [EventController::class, 'update'])->name('update');
-        Route::delete('/{event}', [EventController::class, 'destroy'])->name('destroy');
-        Route::get('/{event}/export-attendances', [EventController::class, 'exportAttendances'])->name('export-attendances');
+        Route::get('/', [AdminEventController::class, 'index'])->name('index');
+        Route::get('/create', [AdminEventController::class, 'create'])->name('create');
+        Route::post('/', [AdminEventController::class, 'store'])->name('store');
+        Route::get('/{event}', [AdminEventController::class, 'show'])->name('show');
+        Route::get('/{event}/edit', [AdminEventController::class, 'edit'])->name('edit');
+        Route::put('/{event}', [AdminEventController::class, 'update'])->name('update');
+        Route::delete('/{event}', [AdminEventController::class, 'destroy'])->name('destroy');
+        Route::get('/{event}/export-attendances', [AdminEventController::class, 'exportAttendances'])->name('export-attendances');
     });
 
     // 参照名簿管理
@@ -115,4 +131,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
         Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
     });
+
+    // システム設定（マスター管理者のみ）
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 });

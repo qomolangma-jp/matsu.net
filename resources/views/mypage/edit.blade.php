@@ -19,6 +19,12 @@
                 <a href="{{ route('mypage.edit') }}" class="list-group-item list-group-item-action active">
                     <i class="bi bi-pencil-square"></i> プロフィール編集
                 </a>
+                <a href="{{ route('news.index') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-newspaper"></i> お知らせ一覧
+                </a>
+                <a href="{{ route('events.index') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-calendar-event"></i> イベント一覧
+                </a>
                 
                 @if(Auth::check() && in_array(Auth::user()->role, ['master_admin', 'year_admin']))
                     <div class="list-group-item bg-light">

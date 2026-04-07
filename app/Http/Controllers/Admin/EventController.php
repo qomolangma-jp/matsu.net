@@ -81,10 +81,10 @@ class EventController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'event_date' => 'required|date',
-            'event_location' => 'nullable|string|max:255',
-            'registration_deadline' => 'nullable|date|before:event_date',
-            'max_participants' => 'nullable|integer|min:1',
-            'target_graduation_year' => 'nullable|integer|min:1948',
+            'location' => 'nullable|string|max:255',
+            'deadline' => 'nullable|date|before:event_date',
+            'capacity' => 'nullable|integer|min:1',
+            'graduation_year' => 'nullable|integer|min:1948',
             'is_published' => 'boolean',
             'send_line_notification' => 'boolean',
         ]);
@@ -92,10 +92,10 @@ class EventController extends Controller
         DB::beginTransaction();
         try {
             // 学年管理者は自学年のイベントのみ作成可能
-            $targetYear = $request->input('target_graduation_year');
+            $targetYear = $request->input('graduation_year');
             if ($user->role === 'year_admin') {
                 if ($targetYear && $targetYear != $user->graduation_year) {
-                    return back()->withErrors(['target_graduation_year' => '自学年以外は選択できません。'])->withInput();
+                    return back()->withErrors(['graduation_year' => '自学年以外は選択できません。'])->withInput();
                 }
                 // NULLの場合は自学年に設定
                 $targetYear = $user->graduation_year;
@@ -105,10 +105,10 @@ class EventController extends Controller
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'event_date' => $validated['event_date'],
-                'event_location' => $validated['event_location'],
-                'registration_deadline' => $validated['registration_deadline'],
-                'max_participants' => $validated['max_participants'],
-                'target_graduation_year' => $targetYear,
+                'location' => $validated['location'],
+                'deadline' => $validated['deadline'],
+                'capacity' => $validated['capacity'],
+                'graduation_year' => $targetYear,
                 'is_published' => $request->boolean('is_published'),
                 'created_by' => $user->id,
             ]);
@@ -147,7 +147,7 @@ class EventController extends Controller
         }
 
         // 学年管理者は自学年のイベントのみ閲覧可能
-        if ($user->role === 'year_admin' && $event->target_graduation_year != $user->graduation_year) {
+        if ($user->role === 'year_admin' && $event->graduation_year != $user->graduation_year) {
             abort(403, '他学年のイベントは閲覧できません。');
         }
 
@@ -164,8 +164,8 @@ class EventController extends Controller
 
         // 対象ユーザー数を取得
         $targetUsersQuery = User::approved();
-        if ($event->target_graduation_year) {
-            $targetUsersQuery->where('graduation_year', $event->target_graduation_year);
+        if ($event->graduation_year) {
+            $targetUsersQuery->where('graduation_year', $event->graduation_year);
         }
         $totalTargetUsers = $targetUsersQuery->count();
 
@@ -205,7 +205,7 @@ class EventController extends Controller
         }
 
         // 学年管理者は自学年のイベントのみ編集可能
-        if ($user->role === 'year_admin' && $event->target_graduation_year != $user->graduation_year) {
+        if ($user->role === 'year_admin' && $event->graduation_year != $user->graduation_year) {
             abort(403, '他学年のイベントは編集できません。');
         }
 
@@ -227,7 +227,7 @@ class EventController extends Controller
         }
 
         // 学年管理者は自学年のイベントのみ更新可能
-        if ($user->role === 'year_admin' && $event->target_graduation_year != $user->graduation_year) {
+        if ($user->role === 'year_admin' && $event->graduation_year != $user->graduation_year) {
             abort(403, '他学年のイベントは更新できません。');
         }
 
@@ -235,9 +235,9 @@ class EventController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'event_date' => 'required|date',
-            'event_location' => 'nullable|string|max:255',
-            'registration_deadline' => 'nullable|date|before:event_date',
-            'max_participants' => 'nullable|integer|min:1',
+            'location' => 'nullable|string|max:255',
+            'deadline' => 'nullable|date|before:event_date',
+            'capacity' => 'nullable|integer|min:1',
             'is_published' => 'boolean',
         ]);
 
@@ -247,9 +247,9 @@ class EventController extends Controller
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'event_date' => $validated['event_date'],
-                'event_location' => $validated['event_location'],
-                'registration_deadline' => $validated['registration_deadline'],
-                'max_participants' => $validated['max_participants'],
+                'location' => $validated['location'],
+                'deadline' => $validated['deadline'],
+                'capacity' => $validated['capacity'],
                 'is_published' => $request->boolean('is_published'),
             ]);
 
@@ -283,7 +283,7 @@ class EventController extends Controller
         }
 
         // 学年管理者は自学年のイベントのみ削除可能
-        if ($user->role === 'year_admin' && $event->target_graduation_year != $user->graduation_year) {
+        if ($user->role === 'year_admin' && $event->graduation_year != $user->graduation_year) {
             abort(403, '他学年のイベントは削除できません。');
         }
 
@@ -317,7 +317,7 @@ class EventController extends Controller
         }
 
         // 学年管理者は自学年のイベントのみエクスポート可能
-        if ($user->role === 'year_admin' && $event->target_graduation_year != $user->graduation_year) {
+        if ($user->role === 'year_admin' && $event->graduation_year != $user->graduation_year) {
             abort(403, '他学年のイベントはエクスポートできません。');
         }
 
@@ -342,7 +342,7 @@ class EventController extends Controller
             // イベント情報
             fputcsv($file, ['イベント名', $event->title]);
             fputcsv($file, ['開催日時', $event->event_date?->format('Y-m-d H:i')]);
-            fputcsv($file, ['開催場所', $event->event_location]);
+            fputcsv($file, ['開催場所', $event->location]);
             fputcsv($file, []);
             
             // ヘッダー行
@@ -388,8 +388,8 @@ class EventController extends Controller
         // 対象ユーザーを取得
         $usersQuery = User::approved()->whereNotNull('line_id');
 
-        if ($event->target_graduation_year) {
-            $usersQuery->where('graduation_year', $event->target_graduation_year);
+        if ($event->graduation_year) {
+            $usersQuery->where('graduation_year', $event->graduation_year);
         }
 
         $users = $usersQuery->get();
@@ -397,7 +397,7 @@ class EventController extends Controller
         if ($users->isEmpty()) {
             Log::warning('LINE送信対象ユーザーが見つかりません', [
                 'event_id' => $event->id,
-                'target_year' => $event->target_graduation_year,
+                'target_year' => $event->graduation_year,
             ]);
             return;
         }

@@ -38,7 +38,7 @@
                             <td>
                                 <strong>{{ $event->title }}</strong><br>
                                 <small class="text-muted">
-                                    <i class="bi bi-geo-alt"></i> {{ $event->event_location ?? '未定' }}
+                                    <i class="bi bi-geo-alt"></i> {{ $event->location ?? '未定' }}
                                 </small>
                             </td>
                             <td>
@@ -49,7 +49,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge {{ $event->target_graduation_year ? 'bg-info' : 'bg-primary' }}">
+                                <span class="badge {{ $event->graduation_year ? 'bg-info' : 'bg-primary' }}">
                                     {{ $event->target_year_display }}
                                 </span>
                             </td>

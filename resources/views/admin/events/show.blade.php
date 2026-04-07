@@ -33,11 +33,11 @@
                     </tr>
                     <tr>
                         <th><i class="bi bi-geo-alt"></i> 開催場所</th>
-                        <td>{{ $event->event_location ?? '未定' }}</td>
+                        <td>{{ $event->location ?? '未定' }}</td>
                     </tr>
                     <tr>
                         <th><i class="bi bi-people"></i> 対象学年</th>
-                        <td><span class="badge {{ $event->target_graduation_year ? 'bg-info' : 'bg-primary' }}">{{ $event->target_year_display }}</span></td>
+                        <td><span class="badge {{ $event->graduation_year ? 'bg-info' : 'bg-primary' }}">{{ $event->target_year_display }}</span></td>
                     </tr>
                 </table>
             </div>
@@ -45,11 +45,11 @@
                 <table class="table table-sm table-borderless">
                     <tr>
                         <th style="width: 120px;"><i class="bi bi-clock"></i> 募集締切</th>
-                        <td>{{ $event->registration_deadline?->format('Y年m月d日 H:i') ?? '設定なし' }}</td>
+                        <td>{{ $event->deadline?->format('Y年m月d日 H:i') ?? '設定なし' }}</td>
                     </tr>
                     <tr>
                         <th><i class="bi bi-hash"></i> 定員</th>
-                        <td>{{ $event->max_participants ? $event->max_participants . '名' : '制限なし' }}</td>
+                        <td>{{ $event->capacity ? $event->capacity . '名' : '制限なし' }}</td>
                     </tr>
                     <tr>
                         <th><i class="bi bi-eye"></i> 公開状態</th>

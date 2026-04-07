@@ -163,7 +163,7 @@
             <a class="nav-link {{ request()->routeIs('admin.news.*') ? 'active' : '' }}" href="{{ route('admin.news.index') }}">
                 <i class="bi bi-newspaper"></i> ニュース管理
             </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}">
                 <i class="bi bi-gear"></i> 設定
             </a>
         </nav>

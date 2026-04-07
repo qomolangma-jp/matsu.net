@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\News;
 use App\Models\Event;
+use App\Models\Setting;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -15,7 +16,11 @@ class LineMessagingService
 
     public function __construct()
     {
-        $this->channelAccessToken = config('services.line.messaging_channel_access_token') ?: null;
+        // DB設定が空でなければ優先、なければenv設定を使用
+        $dbToken = Setting::get('line_channel_access_token', '');
+        $this->channelAccessToken = ($dbToken !== '') 
+            ? $dbToken 
+            : (config('services.line.messaging_channel_access_token') ?: null);
     }
 
     /**

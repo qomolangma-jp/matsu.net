@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -32,7 +33,7 @@ class ApprovalRequestMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '【松.net】新規登録承認依頼',
+            subject: '【' . Setting::get('site_name', '松.net') . '】新規登録承認依頼',
         );
     }
 

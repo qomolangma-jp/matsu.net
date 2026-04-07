@@ -59,13 +59,13 @@
 
                         <!-- 開催場所 -->
                         <div class="col-md-6 mb-3">
-                            <label for="event_location" class="form-label">開催場所</label>
+                            <label for="location" class="form-label">開催場所</label>
                             <input type="text" 
-                                   class="form-control @error('event_location') is-invalid @enderror" 
-                                   id="event_location" 
-                                   name="event_location" 
-                                   value="{{ old('event_location', $event->event_location) }}">
-                            @error('event_location')
+                                   class="form-control @error('location') is-invalid @enderror" 
+                                   id="location" 
+                                   name="location" 
+                                   value="{{ old('location', $event->location) }}">
+                            @error('location')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -74,27 +74,27 @@
                     <div class="row">
                         <!-- 募集締切 -->
                         <div class="col-md-6 mb-3">
-                            <label for="registration_deadline" class="form-label">募集締切日</label>
+                            <label for="deadline" class="form-label">募集締切日</label>
                             <input type="datetime-local" 
-                                   class="form-control @error('registration_deadline') is-invalid @enderror" 
-                                   id="registration_deadline" 
-                                   name="registration_deadline" 
-                                   value="{{ old('registration_deadline', $event->registration_deadline?->format('Y-m-d\TH:i')) }}">
-                            @error('registration_deadline')
+                                   class="form-control @error('deadline') is-invalid @enderror" 
+                                   id="deadline" 
+                                   name="deadline" 
+                                   value="{{ old('deadline', $event->deadline?->format('Y-m-d\TH:i')) }}">
+                            @error('deadline')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <!-- 定員 -->
                         <div class="col-md-6 mb-3">
-                            <label for="max_participants" class="form-label">定員</label>
+                            <label for="capacity" class="form-label">定員</label>
                             <input type="number" 
-                                   class="form-control @error('max_participants') is-invalid @enderror" 
-                                   id="max_participants" 
-                                   name="max_participants" 
-                                   value="{{ old('max_participants', $event->max_participants) }}" 
+                                   class="form-control @error('capacity') is-invalid @enderror" 
+                                   id="capacity" 
+                                   name="capacity" 
+                                   value="{{ old('capacity', $event->capacity) }}" 
                                    min="1">
-                            @error('max_participants')
+                            @error('capacity')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

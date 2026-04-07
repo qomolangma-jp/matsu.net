@@ -19,6 +19,12 @@
                 <a href="{{ route('mypage.edit') }}" class="list-group-item list-group-item-action">
                     <i class="bi bi-pencil-square"></i> プロフィール編集
                 </a>
+                <a href="{{ route('news.index') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-newspaper"></i> お知らせ一覧
+                </a>
+                <a href="{{ route('events.index') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-calendar-event"></i> イベント一覧
+                </a>
                 
                 @if(Auth::check() && in_array(Auth::user()->role, ['master_admin', 'year_admin']))
                     <div class="list-group-item bg-light">
@@ -185,20 +191,23 @@
 
         <!-- お知らせ・イベント情報 -->
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="bi bi-newspaper"></i> 最新のお知らせ
                 </h5>
+                <a href="{{ route('news.index') }}" class="btn btn-sm btn-outline-light">
+                    一覧を見る <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
             <div class="card-body p-0">
                 @forelse($news as $item)
-                    <div class="px-3 py-3 border-bottom">
+                    <a href="{{ route('news.show', $item) }}" class="d-block px-3 py-3 border-bottom text-decoration-none text-dark">
                         <div class="d-flex justify-content-between align-items-start">
                             <strong>{{ $item->title }}</strong>
                             <small class="text-muted ms-2 text-nowrap">{{ $item->published_at->format('Y/m/d') }}</small>
                         </div>
                         <div class="text-muted small mt-1">{{ Str::limit($item->body, 100) }}</div>
-                    </div>
+                    </a>
                 @empty
                     <p class="text-muted p-3 mb-0">現在、お知らせはありません。</p>
                 @endforelse
