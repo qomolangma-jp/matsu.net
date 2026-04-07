@@ -3,26 +3,29 @@
  */
 
 // ========== 画面ログ（LIFF内では console が見えないため） ==========
-(function () {
-    const panel = document.createElement('div');
+var _debugPanel = (function () {
+    var panel = document.createElement('div');
     panel.id = 'debug-panel';
-    panel.style.cssText = [
-        'position:fixed', 'bottom:0', 'left:0', 'right:0',
-        'max-height:40vh', 'overflow-y:auto',
-        'background:rgba(0,0,0,0.85)', 'color:#0f0',
-        'font-size:11px', 'font-family:monospace',
-        'padding:6px 8px', 'z-index:99999',
-        'white-space:pre-wrap', 'word-break:break-all',
-    ].join(';');
-    document.addEventListener('DOMContentLoaded', function () {
-        document.body.appendChild(panel);
-    });
+    panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:45vh;overflow-y:auto;background:rgba(0,0,0,0.88);color:#0f0;font-size:11px;font-family:monospace;padding:6px 8px;z-index:99999;white-space:pre-wrap;word-break:break-all;';
+
+    // DOMContentLoaded を待たずに即挿入を試みる
+    function mountPanel() {
+        if (document.body && !document.getElementById('debug-panel')) {
+            document.body.appendChild(panel);
+        }
+    }
+    if (document.body) {
+        mountPanel();
+    } else {
+        document.addEventListener('DOMContentLoaded', mountPanel);
+    }
 
     function appendLog(label, args, color) {
-        const line = document.createElement('div');
+        mountPanel(); // まだなければ再試行
+        var line = document.createElement('div');
         line.style.color = color;
-        const ts = new Date().toISOString().substr(11, 12);
-        const msg = Array.from(args).map(function (a) {
+        var ts = new Date().toISOString().substr(11, 12);
+        var msg = Array.from(args).map(function (a) {
             try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
             catch (e) { return String(a); }
         }).join(' ');
@@ -31,9 +34,9 @@
         panel.scrollTop = panel.scrollHeight;
     }
 
-    const _log   = console.log.bind(console);
-    const _warn  = console.warn.bind(console);
-    const _error = console.error.bind(console);
+    var _log   = console.log.bind(console);
+    var _warn  = console.warn.bind(console);
+    var _error = console.error.bind(console);
     console.log   = function () { _log.apply(console, arguments);   appendLog('LOG',   arguments, '#0f0'); };
     console.warn  = function () { _warn.apply(console, arguments);  appendLog('WARN',  arguments, '#ff0'); };
     console.error = function () { _error.apply(console, arguments); appendLog('ERR',   arguments, '#f55'); };
@@ -42,13 +45,15 @@
         appendLog('UNCAUGHT', [e.message + ' (' + e.filename + ':' + e.lineno + ')'], '#f55');
     });
     window.addEventListener('unhandledrejection', function (e) {
-        appendLog('PROMISE', [e.reason], '#f55');
+        appendLog('PROMISE', [String(e.reason)], '#f55');
     });
 
-    console.log('=== debug panel ready ===');
-    console.log('URL:', window.location.href);
-    console.log('UA:', navigator.userAgent.substr(0, 80));
+    return { log: appendLog };
 })();
+
+console.log('=== JS loaded ===');
+console.log('URL:', window.location.href);
+console.log('UA:', navigator.userAgent.substr(0, 100));
 // ===================================================================
 
 function setStatus(msg, type) {
@@ -121,6 +126,11 @@ function initializeLocalAutoLogin() {
 
 window.onload = async function() {
     const submitBtn = document.getElementById('submitBtn');
+
+    console.log('=== window.onload fired ===');
+    console.log('LIFF_ID:', window.LIFF_ID);
+    console.log('lineId input value:', document.getElementById('lineId')?.value);
+    console.log('isLocal:', isLocalEnvironment());
 
     // 生年月日変更時のイベント
     const birthDateInput = document.getElementById('birthDate');
