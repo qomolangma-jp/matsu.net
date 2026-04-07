@@ -20,12 +20,9 @@ use App\Http\Controllers\Admin\SettingController;
 |--------------------------------------------------------------------------
 */
 
-// トップページ（LIFF エンドポイント）
-// LIFF のエンドポイント URL が https://matsu.qomolangma.jp/ に設定されているため、
-// ここで liff.init() を実行させてから SDK に /register へナビゲートさせる。
-// 外部ブラウザの認証コールバック（?liff.state=...）も、LINE 内ブラウザの直接アクセスも両方対応。
+// トップページ
 Route::get('/', function () {
-    return view('liff-redirect', ['liffId' => config('services.line.liff_id')]);
+    return redirect()->route('register.form');
 });
 
 // 管理者ログイン

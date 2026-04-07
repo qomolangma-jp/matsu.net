@@ -98,15 +98,6 @@ window.onload = async function() {
             alert('卒業年度を選択してください');
             return;
         }
-        // 本番環境：LINE IDが取得できていなければ送信を止める
-        if (!isLocalEnvironment()) {
-            const lineId = document.getElementById('lineId')?.value;
-            if (!lineId) {
-                e.preventDefault();
-                alert('LINE IDを取得中です。しばらくお待ちください。');
-                return;
-            }
-        }
     });
 
     if (isLocalEnvironment()) {
@@ -148,11 +139,15 @@ window.onload = async function() {
     try {
         await liff.init({ liffId: liffId });
 
-        setStatus('🔐 <b>ログイン状態確認中...</b> isLoggedIn=' + liff.isLoggedIn() + ' / isInClient=' + liff.isInClient(), 'info');
+        setStatus('🔐 isLoggedIn=' + liff.isLoggedIn() + ' / isInClient=' + liff.isInClient(), 'info');
 
         if (!liff.isLoggedIn()) {
-            setStatus('⏳ <b>LINEログインページへ移動中...</b>', 'warning');
-            liff.login({ redirectUri: window.location.href });
+            // LINE アプリ外（PC ブラウザ等）からのアクセス
+            setStatus('⚠️ <b>LINE アプリからアクセスしてください</b>', 'error');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'LINE アプリからアクセスしてください';
+            }
             return;
         }
 
