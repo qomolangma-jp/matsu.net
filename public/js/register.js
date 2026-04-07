@@ -167,8 +167,7 @@ window.onload = async function() {
                 return;
             }
         });
-    } }
-    });
+    }
 
     if (isLocalEnvironment()) {
         setStatus('🏠 <b>ローカル環境</b> — LINE IDフィールドに手動入力してください', 'warning');
