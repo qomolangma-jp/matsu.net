@@ -2,6 +2,23 @@
  * 松.net - 新規登録フォーム JavaScript
  */
 
+function setStatus(msg, type) {
+    const el = document.getElementById('liff-status');
+    if (!el) return;
+    const colors = {
+        info:    { bg: '#f8f9fa', border: '#dee2e6', color: '#495057' },
+        success: { bg: '#d1e7dd', border: '#a3cfbb', color: '#0a3622' },
+        warning: { bg: '#fff3cd', border: '#ffc107', color: '#664d03' },
+        error:   { bg: '#f8d7da', border: '#f1aeb5', color: '#58151c' },
+    };
+    const c = colors[type] || colors.info;
+    el.style.background = c.bg;
+    el.style.borderColor = c.border;
+    el.style.color = c.color;
+    el.innerHTML = msg;
+    console.log('[LIFF Status]', msg.replace(/<[^>]+>/g, ''));
+}
+
 function isLocalEnvironment() {
     return window.location.hostname === 'matsu.localhost' ||
            window.location.hostname === 'localhost' ||
@@ -54,7 +71,6 @@ function initializeLocalAutoLogin() {
 }
 
 window.onload = async function() {
-    const status = document.getElementById('liff-status');
     const submitBtn = document.getElementById('submitBtn');
 
     // 生年月日変更時のイベント
@@ -94,14 +110,30 @@ window.onload = async function() {
     });
 
     if (isLocalEnvironment()) {
-        if (status) status.innerText = 'ローカル環境で起動中...';
+        setStatus('🏠 <b>ローカル環境</b> — LINE IDフィールドに手動入力してください', 'warning');
         initializeLocalAutoLogin();
+
+        // ローカルではlineIdの入力値をリアルタイム表示
+        const lineIdInput = document.getElementById('lineId');
+        if (lineIdInput) {
+            const showLocalId = () => {
+                const val = lineIdInput.value.trim();
+                if (val) {
+                    setStatus('🏠 <b>ローカル環境</b> — LINE ID（手動）: <code>' + val + '</code>', 'success');
+                } else {
+                    setStatus('🏠 <b>ローカル環境</b> — LINE IDフィールドに手動入力してください', 'warning');
+                }
+            };
+            lineIdInput.addEventListener('input', showLocalId);
+            lineIdInput.addEventListener('change', showLocalId);
+            showLocalId();
+        }
         return;
     }
 
     const liffId = window.LIFF_ID;
     if (!liffId) {
-        if (status) status.innerText = 'LIFF ID未設定';
+        setStatus('❌ <b>LIFF ID未設定</b> — config services.line.liff_id を確認してください', 'error');
         return;
     }
 
@@ -111,23 +143,26 @@ window.onload = async function() {
         submitBtn.dataset.originalText = submitBtn.textContent;
         submitBtn.textContent = 'LINE ID取得中...';
     }
-    if (status) status.innerText = 'LINEログイン情報を確認中...';
+    setStatus('⏳ <b>LIFF初期化中...</b> (ID: ' + liffId + ')', 'info');
 
     try {
         await liff.init({ liffId: liffId });
 
+        setStatus('🔐 <b>ログイン状態確認中...</b> isLoggedIn=' + liff.isLoggedIn() + ' / isInClient=' + liff.isInClient(), 'info');
+
         if (!liff.isLoggedIn()) {
+            setStatus('⏳ <b>LINEログインページへ移動中...</b>', 'warning');
             liff.login({ redirectUri: window.location.href });
             return;
         }
 
-        if (status) status.innerText = 'LINE情報を取得中...';
+        setStatus('⏳ <b>プロフィール取得中...</b>', 'info');
 
         const profile = await liff.getProfile();
         document.getElementById('lineId').value = profile.userId;
-        console.log('LINE User ID:', profile.userId);
 
-        if (status) status.innerText = 'LINE ID: ' + profile.userId;
+        setStatus('✅ <b>LINE ID取得成功！</b><br>userId: <code>' + profile.userId + '</code><br>displayName: ' + profile.displayName, 'success');
+        console.log('LINE User ID:', profile.userId);
 
         // 送信ボタンを有効化
         if (submitBtn) {
@@ -135,13 +170,9 @@ window.onload = async function() {
             submitBtn.textContent = submitBtn.dataset.originalText || '登録する';
         }
 
-        // ローカル環境と違い、本番では既存ユーザーチェックのリダイレクトは行わない
-        // LINE ID は hidden input にセット済みのため、そのままフォーム入力へ進む
-
     } catch (err) {
-        if (status) status.innerText = '初期化エラー: ' + err.message;
+        setStatus('❌ <b>エラー: ' + err.message + '</b>', 'error');
         console.error('LIFF初期化エラー:', err);
-        // エラー時も送信ボタンを戻す（再試行できるよう）
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = submitBtn.dataset.originalText || '登録する';

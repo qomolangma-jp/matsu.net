@@ -47,8 +47,10 @@
                     @else
                         <!-- 本番環境：LIFF経由で自動取得 -->
                         <input type="hidden" name="line_id" id="lineId" value="">
-                        <div id="liff-status" style="text-align:center;margin-top:4px;color:#666;font-size:0.9em;"></div>
                     @endif
+
+                    <!-- LIFF デバッグ表示（ローカル・本番共通） -->
+                    <div id="liff-status" class="mb-3 p-2 rounded border" style="font-size:0.85em;font-family:monospace;background:#f8f9fa;border-color:#dee2e6!important;min-height:2.5em;">⏳ 初期化中...</div>
 
                     <!-- 氏名（姓） -->
                     <div class="mb-3">
