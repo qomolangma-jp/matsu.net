@@ -21,12 +21,9 @@ use App\Http\Controllers\Admin\SettingController;
 */
 
 // トップページ = LIFF エンドポイント URL
-// liff.init() は必ずエンドポイント URL 上で実行する必要がある。
-// HTTP redirect すると LINE が渡した認証コードが消えて init() がハングするため、
-// このページで liff.init() を完了させてから /register へ移動する。
-Route::get('/', function () {
-    return view('liff-redirect', ['liffId' => config('services.line.liff_id')]);
-});
+// "/" でそのまま登録フォームを返す（リダイレクトしない）
+// liff.init() はエンドポイント URL 上で実行される必要があるため
+Route::get('/', [RegisterController::class, 'showForm'])->name('home');
 
 // 管理者ログイン
 Route::get('/admin', function () {

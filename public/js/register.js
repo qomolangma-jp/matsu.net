@@ -166,9 +166,7 @@ window.onload = async function() {
         setStatus('✅ <b>LINE ID取得成功！</b><br>userId: <code>' + profile.userId + '</code><br>displayName: ' + profile.displayName, 'success');
         console.log('LINE User ID:', profile.userId);
 
-        // 既存ユーザーチェック：/auth/line へ渡してサーバー側で判定
-        // 既存ユーザー → 自動ログイン → マイページ
-        // 未登録     → 登録フォームに line_id を引き継いで戻ってくる
+        // 既存ユーザーチェック → サーバー側で振り分け
         window.location.href = '/auth/line?line_id=' + encodeURIComponent(profile.userId);
 
     } catch (err) {
