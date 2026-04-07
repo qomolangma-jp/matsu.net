@@ -124,12 +124,46 @@ class MyPageController extends Controller
      */
     public function editPassword()
     {
-        $user = Auth::user();
+        $user = Auth::user()?->fresh();
         
         if (!$user) {
             return redirect()->route('register.form');
         }
         
         return view('mypage.password', compact('user'));
+    }
+
+    /**
+     * パスワード変更処理
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user()?->fresh();
+
+        if (!$user) {
+            return redirect()->route('register.form');
+        }
+
+        $request->validate([
+            'current_password' => ['required'],
+            'password'         => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'current_password.required' => '現在のパスワードを入力してください。',
+            'password.required'         => '新しいパスワードを入力してください。',
+            'password.min'              => 'パスワードは8文字以上で入力してください。',
+            'password.confirmed'        => '新しいパスワードが一致しません。',
+        ]);
+
+        // 現在のパスワード確認
+        if (!$user->password || !Hash::check($request->current_password, $user->password)) {
+            return redirect()->back()
+                ->withErrors(['current_password' => '現在のパスワードが正しくありません。'])
+                ->withInput();
+        }
+
+        $user->update(['password' => Hash::make($request->password)]);
+
+        return redirect()->route('mypage.password')
+            ->with('success', 'パスワードを変更しました。');
     }
 }

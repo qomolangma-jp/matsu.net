@@ -12,9 +12,26 @@
     <!-- Custom CSS -->
     <style>
         :root {
-            --primary-color: #2c5f2d;
-            --secondary-color: #97bc62;
+            --primary-color: {{ app()->environment('local') ? '#1a4a7a' : '#2c5f2d' }};
+            --secondary-color: {{ app()->environment('local') ? '#5b9bd5' : '#97bc62' }};
         }
+
+        @if(app()->environment('local'))
+        .local-badge {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: #dc3545;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 4px;
+            z-index: 9999;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        @endif
         
         body {
             background-color: #f8f9fa;
@@ -64,10 +81,14 @@
     <nav class="navbar navbar-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <h4 class="mb-0">松.net</h4>
+                <h4 class="mb-0">松.net @if(app()->environment('local'))<small class="badge bg-danger ms-2" style="font-size:0.5em; vertical-align:middle;">LOCAL</small>@endif</h4>
             </a>
         </div>
     </nav>
+
+    @if(app()->environment('local'))
+    <div class="local-badge">⚠ LOCAL</div>
+    @endif
 
     <!-- メインコンテンツ -->
     <main class="container pb-5">

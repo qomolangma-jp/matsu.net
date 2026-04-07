@@ -19,6 +19,9 @@
                 <a href="{{ route('mypage.edit') }}" class="list-group-item list-group-item-action">
                     <i class="bi bi-pencil-square"></i> プロフィール編集
                 </a>
+                <a href="{{ route('mypage.password') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-key"></i> パスワード変更
+                </a>
                 <a href="{{ route('news.index') }}" class="list-group-item list-group-item-action active">
                     <i class="bi bi-newspaper"></i> お知らせ一覧
                 </a>

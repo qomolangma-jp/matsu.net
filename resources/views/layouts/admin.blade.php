@@ -15,8 +15,8 @@
     <!-- Custom CSS -->
     <style>
         :root {
-            --primary-color: #2c5f2d;
-            --secondary-color: #97bc62;
+            --primary-color: {{ app()->environment('local') ? '#1a4a7a' : '#2c5f2d' }};
+            --secondary-color: {{ app()->environment('local') ? '#5b9bd5' : '#97bc62' }};
             --sidebar-width: 250px;
         }
         
@@ -141,7 +141,7 @@
     <!-- サイドバー -->
     <div class="sidebar">
         <div class="logo">
-            <h4 class="mb-1">松.net</h4>
+            <h4 class="mb-1">松.net @if(app()->environment('local'))<span class="badge bg-danger" style="font-size:0.45em; vertical-align:middle;">LOCAL</span>@endif</h4>
             <small>管理画面</small>
         </div>
         

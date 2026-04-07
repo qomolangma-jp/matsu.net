@@ -69,6 +69,8 @@ Route::middleware(['auth'])->prefix('mypage')->name('mypage.')->group(function (
     Route::get('/', [MyPageController::class, 'index'])->name('index');
     Route::get('/edit', [MyPageController::class, 'edit'])->name('edit');
     Route::put('/update', [MyPageController::class, 'update'])->name('update');
+    Route::get('/password', [MyPageController::class, 'editPassword'])->name('password');
+    Route::put('/password', [MyPageController::class, 'updatePassword'])->name('password.update');
 });
 
 // お知らせ（ログインユーザー向け）
