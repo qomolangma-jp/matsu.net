@@ -107,15 +107,43 @@
 
                     <!-- 生年月日 -->
                     <div class="mb-3">
-                        <label for="birthDate" class="form-label required">生年月日</label>
-                        <input type="date" 
-                               class="form-control @error('birth_date') is-invalid @enderror" 
-                               id="birthDate" 
-                               name="birth_date" 
-                               value="{{ old('birth_date') }}" 
-                               required>
+                        <label class="form-label required">生年月日</label>
+                        @php
+                            $currentYear   = (int) date('Y');
+                            $minYear       = $currentYear - 99;  // 99歳
+                            $maxYear       = $currentYear - 15;  // 15歳
+                            $oldBirth      = old('birth_date', '');
+                            $oldYear       = $oldBirth ? (int) substr($oldBirth, 0, 4) : '';
+                            $oldMonth      = $oldBirth ? (int) substr($oldBirth, 5, 2) : '';
+                            $oldDay        = $oldBirth ? (int) substr($oldBirth, 8, 2) : '';
+                        @endphp
+                        {{-- hidden: YYYY-MM-DD に結合してサブミット --}}
+                        <input type="hidden" name="birth_date" id="birthDate" value="{{ $oldBirth }}">
+                        <div class="d-flex gap-2 align-items-center">
+                            {{-- 年 --}}
+                            <select id="birthYear" class="form-select @error('birth_date') is-invalid @enderror" style="flex:2;">
+                                <option value="">年</option>
+                                @for($y = $maxYear; $y >= $minYear; $y--)
+                                    <option value="{{ $y }}" {{ $oldYear == $y ? 'selected' : '' }}>{{ $y }}年</option>
+                                @endfor
+                            </select>
+                            {{-- 月 --}}
+                            <select id="birthMonth" class="form-select @error('birth_date') is-invalid @enderror" style="flex:1;">
+                                <option value="">月</option>
+                                @for($m = 1; $m <= 12; $m++)
+                                    <option value="{{ $m }}" {{ $oldMonth == $m ? 'selected' : '' }}>{{ $m }}月</option>
+                                @endfor
+                            </select>
+                            {{-- 日 --}}
+                            <select id="birthDay" class="form-select @error('birth_date') is-invalid @enderror" style="flex:1;">
+                                <option value="">日</option>
+                                @for($d = 1; $d <= 31; $d++)
+                                    <option value="{{ $d }}" {{ $oldDay == $d ? 'selected' : '' }}>{{ $d }}日</option>
+                                @endfor
+                            </select>
+                        </div>
                         @error('birth_date')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -208,4 +236,64 @@
 
 @push('scripts')
 <script src="{{ asset('js/register.js') }}"></script>
+<script>
+(function () {
+    const yearSel  = document.getElementById('birthYear');
+    const monthSel = document.getElementById('birthMonth');
+    const daySel   = document.getElementById('birthDay');
+    const hidden   = document.getElementById('birthDate');
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function updateDays() {
+        const y = parseInt(yearSel.value);
+        const m = parseInt(monthSel.value);
+        const current = parseInt(daySel.value);
+        const max = (y && m) ? new Date(y, m, 0).getDate() : 31;
+        // 日の選択肢を再構築
+        daySel.innerHTML = '<option value="">日</option>';
+        for (let d = 1; d <= max; d++) {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d + '日';
+            if (d === current) opt.selected = true;
+            daySel.appendChild(opt);
+        }
+    }
+
+    function syncHidden() {
+        const y = yearSel.value;
+        const m = monthSel.value;
+        const d = daySel.value;
+        hidden.value = (y && m && d)
+            ? y + '-' + pad(m) + '-' + pad(d)
+            : '';
+        // register.js の updateGraduationYearOptions を呼ぶ
+        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    yearSel.addEventListener('change', function () { updateDays(); syncHidden(); });
+    monthSel.addEventListener('change', function () { updateDays(); syncHidden(); });
+    daySel.addEventListener('change', syncHidden);
+
+    // ページロード時に日の選択肢を初期化
+    updateDays();
+    // フォーム送信前に hidden が空なら阻止
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        if (!hidden.value) {
+            e.preventDefault();
+            yearSel.classList.add('is-invalid');
+            monthSel.classList.add('is-invalid');
+            daySel.classList.add('is-invalid');
+            yearSel.closest('.mb-3').insertAdjacentHTML('beforeend',
+                '<div class="text-danger small mt-1" id="birthErr">生年月日を選択してください。</div>');
+        }
+    });
+    [yearSel, monthSel, daySel].forEach(s => s.addEventListener('change', function () {
+        this.classList.remove('is-invalid');
+        const err = document.getElementById('birthErr');
+        if (err) err.remove();
+    }));
+})();
+</script>
 @endpush
