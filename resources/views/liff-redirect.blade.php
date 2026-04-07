@@ -19,12 +19,18 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
         liff.init({ liffId: '{{ $liffId }}' })
+            .then(function() {
+                // liff.init() が liff.state の値（/register）へ自動リダイレクトする
+                // 5秒経っても遷移しない場合はフォールバック
+                setTimeout(function() {
+                    window.location.href = '/register';
+                }, 5000);
+            })
             .catch(function(err) {
                 document.querySelector('.box').innerHTML =
                     '<p style="color:#c0392b">ログインエラー: ' + err.message + '</p>' +
                     '<a href="/register">登録ページへ戻る</a>';
             });
-        // liff.init() が liff.state の /register へ自動リダイレクトする
     </script>
 </body>
 </html>

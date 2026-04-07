@@ -22,11 +22,14 @@ use App\Http\Controllers\Admin\SettingController;
 
 // トップページ
 Route::get('/', function () {
-    // LINEログイン後のリダイレクト先（?liff.state=...&code=... が付いている場合）
-    // LIFF SDKが認証コードを処理するために、ここで liff.init() を実行してから SDK に /register へ誘導させる
-    if (request()->has('liff.state')) {
-        $liffId = config('services.line.liff_id');
-        return response(view('liff-redirect', ['liffId' => $liffId]));
+    // PHP はクエリパラメータ名のドットをアンダースコアに変換するため
+    // ?liff.state=... は $_GET['liff_state'] になる
+    // さらに生のクエリ文字列でも確認する（確実な検出のため）
+    $qs = $_SERVER['QUERY_STRING'] ?? '';
+    $hasLiffState = request()->has('liff_state') || str_contains($qs, 'liff.state');
+
+    if ($hasLiffState) {
+        return view('liff-redirect', ['liffId' => config('services.line.liff_id')]);
     }
     return redirect()->route('register.form');
 });
