@@ -3,7 +3,8 @@
  */
 
 // ========== 画面ログ（LIFF内では console が見えないため） ==========
-var _debugPanel = (function () {
+var SHOW_DEBUG_PANEL = false; // 一時的にフロントのデバッグ表示を無効化
+var _debugPanel = SHOW_DEBUG_PANEL ? (function () {
     var panel = document.createElement('div');
     panel.id = 'debug-panel';
     panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:45vh;overflow-y:auto;background:rgba(0,0,0,0.88);color:#0f0;font-size:11px;font-family:monospace;padding:6px 8px;z-index:99999;white-space:pre-wrap;word-break:break-all;';
@@ -49,7 +50,7 @@ var _debugPanel = (function () {
     });
 
     return { log: appendLog };
-})();
+})() : { log: function () {} };
 
 console.log('=== JS loaded ===');
 console.log('URL:', window.location.href);

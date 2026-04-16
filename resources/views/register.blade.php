@@ -49,8 +49,8 @@
                         <input type="hidden" name="line_id" id="lineId" value="{{ $lineId ?? '' }}">
                     @endif
 
-                    <!-- LIFF デバッグ表示（ローカル・本番共通） -->
-                    <div id="liff-status" class="mb-3 p-2 rounded border" style="font-size:0.85em;font-family:monospace;background:#f8f9fa;border-color:#dee2e6!important;min-height:2.5em;">⏳ 初期化中...</div>
+                    <!-- LIFF デバッグ表示（暫定的に非表示） -->
+                    <div id="liff-status" class="mb-3 p-2 rounded border" style="display:none;font-size:0.85em;font-family:monospace;background:#f8f9fa;border-color:#dee2e6!important;min-height:2.5em;">⏳ 初期化中...</div>
 
                     <!-- 氏名（姓） -->
                     <div class="mb-3">
