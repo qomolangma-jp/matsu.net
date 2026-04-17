@@ -160,9 +160,9 @@ window.onload = async function() {
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
         registerForm.addEventListener('submit', function(e) {
-            const gradYearEl = document.getElementById('graduationYear');
-            const graduationYear = gradYearEl ? gradYearEl.value : '';
-            if (!graduationYear) {
+            const gradTermEl = document.getElementById('graduationTerm');
+            const graduationTerm = gradTermEl ? gradTermEl.value : '';
+            if (!graduationTerm) {
                 e.preventDefault();
                 alert('卒業年度を選択してください');
                 return;

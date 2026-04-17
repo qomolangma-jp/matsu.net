@@ -284,6 +284,17 @@ window.LIFF_ID = "{{ config('services.line.liff_id') }}";
 
     // ページロード時に日の選択肢を初期化
     updateDays();
+    if (hidden.value) {
+        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+        // フォームエラー等で戻ってきた時の卒業年度復元
+        setTimeout(() => {
+            const oldGrad = "{{ old('graduation_term') }}";
+            if (oldGrad) {
+                const termSel = document.getElementById('graduationTerm');
+                if (termSel) termSel.value = oldGrad;
+            }
+        }, 100);
+    }
     // フォーム送信前に hidden が空なら阻止
     document.getElementById('registerForm').addEventListener('submit', function (e) {
         if (!hidden.value) {

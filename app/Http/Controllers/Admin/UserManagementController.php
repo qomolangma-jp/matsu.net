@@ -321,10 +321,12 @@ class UserManagementController extends Controller
             ]);
 
             // 参照名簿の登録済みフラグ更新（該当する場合）
+            // Model: ReferenceRoster doesn't have last_name, first_name, graduation_year columns, it uses name and graduation_term
+            // Using DB raw query with full name concatenation and LIKE
+            $userFullName = str_replace([' ', '　'], '', $user->last_name . $user->first_name);
             DB::table('reference_rosters')
-                ->where('last_name', $user->last_name)
-                ->where('first_name', $user->first_name)
-                ->where('graduation_year', $user->graduation_year)
+                ->whereRaw("REPLACE(REPLACE(name, ' ', ''), '　', '') = ?", [$userFullName])
+                ->where('graduation_term', 'LIKE', '%高校' . ($user->graduation_year - 1947) . '回期%')
                 ->update(['is_registered' => true]);
 
             DB::commit();
