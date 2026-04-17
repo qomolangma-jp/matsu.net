@@ -99,6 +99,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
         Route::post('/{user}/approve', [UserManagementController::class, 'approve'])->name('approve');
         Route::post('/{user}/reject', [UserManagementController::class, 'reject'])->name('reject');
+        Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
     });
 
     // ニュース管理

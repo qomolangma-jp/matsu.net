@@ -233,6 +233,13 @@
                                             <i class="bi bi-x"></i>
                                         </button>
                                     @endif
+
+                                    <button type="button"
+                                            class="btn btn-outline-danger"
+                                            title="削除"
+                                            onclick="deleteUser({{ $user->id }}, '{{ $user->full_name }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -268,6 +275,12 @@
     @csrf
     <input type="hidden" name="note" id="rejectNote">
 </form>
+
+<!-- 削除フォーム（非表示） -->
+<form id="deleteForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
 @endsection
 
 @push('scripts')
@@ -286,6 +299,14 @@ function rejectUser(userId, userName) {
         const form = document.getElementById('rejectForm');
         document.getElementById('rejectNote').value = note || '管理者により却下';
         form.action = `/admin/users/${userId}/reject`;
+        form.submit();
+    }
+}
+
+function deleteUser(userId, userName) {
+    if (confirm(`本当に${userName}さんを削除してもよろしいですか？\nこの操作は取り消せません。`)) {
+        const form = document.getElementById('deleteForm');
+        form.action = `/admin/users/${userId}`;
         form.submit();
     }
 }

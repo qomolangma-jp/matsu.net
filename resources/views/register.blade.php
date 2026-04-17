@@ -10,19 +10,32 @@
                 <h5 class="mb-0">新規登録</h5>
             </div>
             <div class="card-body p-4">
-                <!-- エラーメッセージ表示 -->
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                @php
+                    $showLoading = config('app.env') !== 'local' && empty($lineId) && !$errors->any();
+                @endphp
 
-                <form action="{{ route('register.submit') }}" method="POST" id="registerForm">
-                    @csrf
+                <!-- ローディング表示 -->
+                <div id="liffLoading" class="text-center py-5" style="{{ $showLoading ? '' : 'display: none;' }}">
+                    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted fw-bold">LINE連携を確認中です...<br><small>少々お待ちください</small></p>
+                </div>
+
+                <div id="formContainer" style="{{ $showLoading ? 'display: none;' : '' }}">
+                    <!-- エラーメッセージ表示 -->
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('register.submit') }}" method="POST" id="registerForm">
+                        @csrf
                     
                     <!-- LINE ID -->
                     @if(config('app.env') === 'local')
@@ -224,6 +237,7 @@
                         </button>
                     </div>
                 </form>
+                </div> <!-- /formContainer -->
             </div>
         </div>
 

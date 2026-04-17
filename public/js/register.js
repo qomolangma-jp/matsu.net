@@ -189,12 +189,14 @@ window.onload = async function() {
             lineIdInput.addEventListener('change', showLocalId);
             showLocalId();
         }
+        showFormContainer();
         return;
     }
 
     const liffId = window.LIFF_ID;
     if (!liffId) {
-        setStatus('❌ <b>LIFF ID未設定</b> — config services.line.liff_id を確認してください', 'error');
+        setStatus('❌ <b>LIFF ID未設定</b> - config services.line.liff_id を確認してください', 'error');
+        showFormContainer();
         return;
     }
 
@@ -204,6 +206,7 @@ window.onload = async function() {
     const existingLineId = lineIdEl2 ? lineIdEl2.value : '';
     if (existingLineId) {
         setStatus('✅ <b>LINE ID確認済み</b>: <code>' + existingLineId + '</code>', 'success');
+        showFormContainer();
         return;
     }
 
@@ -225,8 +228,7 @@ window.onload = async function() {
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'LINE アプリからアクセスしてください';
-            }
-            return;
+            }            showFormContainer();            return;
         }
 
         setStatus('⏳ <b>プロフィール取得中...</b>', 'info');
@@ -247,11 +249,23 @@ window.onload = async function() {
             submitBtn.disabled = false;
             submitBtn.textContent = submitBtn.dataset.originalText || '登録する';
         }
+        showFormContainer();
     }
 };
 
 /**
+ * 登録フォームを表示する（ローディングを消す）
+ */
+function showFormContainer() {
+    const loading = document.getElementById('liffLoading');
+    const container = document.getElementById('formContainer');
+    if (loading) loading.style.display = 'none';
+    if (container) container.style.display = 'block';
+}
+
+/**
  * 生年月日から卒業年度の選択肢を生成
+
  *
  * 【計算基準】
  * - 高校51回期 = 1999年3月卒業（1998年度）

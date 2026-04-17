@@ -405,6 +405,71 @@ class UserManagementController extends Controller
     }
 
     /**
+     * ユーザー削除
+     */
+    public function destroy(User $user)
+    {
+        $admin = Auth::user();
+
+        // 権限チェック
+        if (!in_array($admin->role, ['year_admin', 'master_admin'])) {
+            abort(403, '管理者権限が必要です。');
+        }
+
+        // 学年管理者の場合、自学年のみ削除可能
+        if ($admin->role === 'year_admin' && $admin->graduation_year !== $user->graduation_year) {
+            abort(403, '他学年のユーザーは削除できません。');
+        }
+
+        // 自分自身は削除不可
+        if ($admin->id === $user->id) {
+            return redirect()
+                ->back()
+                ->with('error', '自分自身は削除できません。');
+        }
+
+        DB::beginTransaction();
+        try {
+            // 中間テーブルがある場合は削除
+            $user->categories()->detach();
+
+            $userFullName = str_replace([' ', '　'], '', $user->last_name . $user->first_name);
+
+            // 参照名簿の登録済みフラグをリセットする場合（オプション）
+            DB::table('reference_rosters')
+                ->whereRaw("REPLACE(REPLACE(name, ' ', ''), '　', '') = ?", [$userFullName])
+                ->where('graduation_term', 'LIKE', '%高校' . ($user->graduation_year - 1947) . '回期%')
+                ->update(['is_registered' => false]);
+
+            // ユーザー削除
+            $user->delete();
+
+            DB::commit();
+
+            Log::info('User deleted', [
+                'user_id' => $user->id,
+                'deleted_by' => $admin->id,
+            ]);
+
+            return redirect()
+                ->route('admin.users.index')
+                ->with('success', "{$user->full_name}さんを削除しました。");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('User deletion failed: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'admin_id' => $admin->id,
+                'exception' => $e,
+            ]);
+
+            return redirect()
+                ->back()
+                ->with('error', '削除処理に失敗しました。');
+        }
+    }
+
+    /**
      * 卒業年度リストを取得
      */
     private function getGraduationYearsList($user)

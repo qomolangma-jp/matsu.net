@@ -330,14 +330,25 @@
     </div>
 
     <!-- ボタン -->
-    <div class="d-flex gap-2 justify-content-end mb-4">
-        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-x-circle"></i> キャンセル
-        </a>
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> 更新する
+    <div class="d-flex justify-content-between mb-4">
+        <button type="button" class="btn btn-outline-danger" onclick="deleteUser()">
+            <i class="bi bi-trash"></i> 削除する
         </button>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> キャンセル
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> 更新する
+            </button>
+        </div>
     </div>
+</form>
+
+<!-- 削除用フォーム（非表示） -->
+<form id="deleteForm" action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
 </form>
 @endsection
 
@@ -368,5 +379,12 @@ document.getElementById('searchAddressBtn')?.addEventListener('click', function(
             alert('住所検索に失敗しました');
         });
 });
+
+// ユーザー削除の確認
+function deleteUser() {
+    if (confirm('本当にこのユーザーを削除してもよろしいですか？\nこの操作は取り消せません。')) {
+        document.getElementById('deleteForm').submit();
+    }
+}
 </script>
 @endpush
