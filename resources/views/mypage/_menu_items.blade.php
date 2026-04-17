@@ -8,12 +8,15 @@
     <a href="{{ route('mypage.password') }}" class="list-group-item list-group-item-action {{ request()->routeIs('mypage.password') ? 'active' : '' }}">
         <i class="bi bi-key"></i> パスワード変更
     </a>
+
+    @if(Auth::user()->approval_status === 'approved')
     <a href="{{ route('news.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('news.*') ? 'active' : '' }}">
         <i class="bi bi-newspaper"></i> お知らせ一覧
     </a>
     <a href="{{ route('events.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('events.*') ? 'active' : '' }}">
         <i class="bi bi-calendar-event"></i> イベント一覧
     </a>
+    @endif
 
     @if(Auth::check() && in_array(Auth::user()->role, ['master_admin', 'year_admin']))
         <div class="list-group-item bg-light">

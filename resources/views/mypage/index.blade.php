@@ -9,6 +9,14 @@
     <!-- メインコンテンツ -->
     <div class="col-12 col-md-9">
 
+        @if($user->approval_status !== 'approved')
+        <div class="alert alert-warning">
+            <i class="bi bi-hourglass-split me-1"></i>
+            <strong>承認待ち</strong> — アカウントは現在承認待ちです。管理者が承認するまで、お知らせ・イベントは閲覧できません。
+        </div>
+        @endif
+
+        @if($user->approval_status === 'approved')
         <!-- お知らせ・イベント情報 -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -67,7 +75,9 @@
                     <p class="text-muted p-3 mb-0">現在、予定されているイベントはありません。</p>
                 @endforelse
             </div>
-        </div>        
+        </div>
+
+        @endif {{-- approved --}}
 
         <div class="card mb-4">
             <div class="card-header">

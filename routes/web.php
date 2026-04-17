@@ -76,14 +76,14 @@ Route::middleware(['auth'])->prefix('mypage')->name('mypage.')->group(function (
     Route::put('/password', [MyPageController::class, 'updatePassword'])->name('password.update');
 });
 
-// お知らせ（ログインユーザー向け）
-Route::middleware(['auth'])->prefix('news')->name('news.')->group(function () {
+// お知らせ（承認済みユーザーのみ）
+Route::middleware(['auth', 'approved'])->prefix('news')->name('news.')->group(function () {
     Route::get('/', [NewsController::class, 'index'])->name('index');
     Route::get('/{news}', [NewsController::class, 'show'])->name('show');
 });
 
-// イベント（ログインユーザー向け）
-Route::middleware(['auth'])->prefix('events')->name('events.')->group(function () {
+// イベント（承認済みユーザーのみ）
+Route::middleware(['auth', 'approved'])->prefix('events')->name('events.')->group(function () {
     Route::get('/', [EventController::class, 'index'])->name('index');
     Route::get('/{event}', [EventController::class, 'show'])->name('show');
     Route::post('/{event}/respond', [EventController::class, 'respond'])->name('respond');
