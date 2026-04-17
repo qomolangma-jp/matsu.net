@@ -72,6 +72,15 @@
             content: " *";
             color: #dc3545;
         }
+
+        .list-item-hover {
+            transition: background-color 0.15s ease;
+            cursor: pointer;
+        }
+        .list-item-hover:hover,
+        .list-item-hover:active {
+            background-color: #f0f7f0 !important;
+        }
     </style>
     
     @stack('styles')
@@ -83,8 +92,36 @@
             <a class="navbar-brand" href="/">
                 <h4 class="mb-0">松.net @if(app()->environment('local'))<small class="badge bg-danger ms-2" style="font-size:0.5em; vertical-align:middle;">LOCAL</small>@endif</h4>
             </a>
+            @auth
+            <button class="navbar-toggler d-md-none border-0"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#appOffcanvas"
+                    aria-controls="appOffcanvas"
+                    aria-label="メニューを開く">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            @endauth
         </div>
     </nav>
+
+    @auth
+    {{-- オフキャンバスメニュー (スマホ用) --}}
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="appOffcanvas" aria-labelledby="appOffcanvasLabel">
+        <div class="offcanvas-header" style="background-color: var(--primary-color); color: white;">
+            <h6 class="offcanvas-title mb-0" id="appOffcanvasLabel">
+                <i class="bi bi-person-circle me-1"></i> メニュー
+            </h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            @include('mypage._menu_items')
+        </div>
+    </div>
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+        @csrf
+    </form>
+    @endauth
 
     @if(app()->environment('local'))
     <div class="local-badge">⚠ LOCAL</div>
@@ -92,6 +129,18 @@
 
     <!-- メインコンテンツ -->
     <main class="container pb-5">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
         @yield('content')
     </main>
 

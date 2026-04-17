@@ -4,75 +4,10 @@
 
 @section('content')
 <div class="row">
-    <!-- サイドバー -->
-    <div class="col-md-3 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="bi bi-person-circle"></i> メニュー
-                </h6>
-            </div>
-            <div class="list-group list-group-flush">
-                <a href="{{ route('mypage.index') }}" class="list-group-item list-group-item-action active">
-                    <i class="bi bi-house-door"></i> マイページ
-                </a>
-                <a href="{{ route('mypage.edit') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-pencil-square"></i> プロフィール編集
-                </a>
-                <a href="{{ route('mypage.password') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-key"></i> パスワード変更
-                </a>
-                <a href="{{ route('news.index') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-newspaper"></i> お知らせ一覧
-                </a>
-                <a href="{{ route('events.index') }}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-calendar-event"></i> イベント一覧
-                </a>
-                
-                @if(Auth::check() && in_array(Auth::user()->role, ['master_admin', 'year_admin']))
-                    <div class="list-group-item bg-light">
-                        <small class="text-muted fw-bold">管理メニュー</small>
-                    </div>
-                    <a href="{{ route('admin.users.index') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-people"></i> 名簿管理
-                    </a>
-                    @if(Auth::user()->role === 'master_admin')
-                        <a href="{{ route('admin.reference_rosters.index') }}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-database"></i> 参照名簿
-                        </a>
-                        <a href="{{ route('admin.categories.index') }}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-tags"></i> カテゴリー管理
-                        </a>
-                    @endif
-                    <a href="{{ route('admin.news.index') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-newspaper"></i> ニュース管理
-                    </a>
-                    <a href="{{ route('admin.events.index') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-calendar-event"></i> イベント管理
-                    </a>
-                @endif
-                
-                <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
-                   class="list-group-item list-group-item-action text-danger">
-                    <i class="bi bi-box-arrow-right"></i> ログアウト
-                </a>
-            </div>
-        </div>
-        
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-            @csrf
-        </form>
-    </div>
+    @include('mypage._sidebar')
 
     <!-- メインコンテンツ -->
-    <div class="col-md-9">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
+    <div class="col-12 col-md-9">
 
         <!-- お知らせ・イベント情報 -->
         <div class="card mb-4">
@@ -86,10 +21,13 @@
             </div>
             <div class="card-body p-0">
                 @forelse($news as $item)
-                    <a href="{{ route('news.show', $item) }}" class="d-block px-3 py-3 border-bottom text-decoration-none text-dark">
+                    <a href="{{ route('news.show', $item) }}" class="d-block px-3 py-3 border-bottom text-decoration-none text-dark list-item-hover">
                         <div class="d-flex justify-content-between align-items-start">
                             <strong>{{ $item->title }}</strong>
-                            <small class="text-muted ms-2 text-nowrap">{{ $item->published_at->format('Y/m/d') }}</small>
+                            <span class="d-flex align-items-center gap-2 ms-2">
+                                <small class="text-muted text-nowrap">{{ $item->published_at->format('Y/m/d') }}</small>
+                                <i class="bi bi-chevron-right text-muted"></i>
+                            </span>
                         </div>
                         <div class="text-muted small mt-1">{{ Str::limit($item->body, 100) }}</div>
                     </a>
@@ -100,17 +38,23 @@
         </div>
 
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                     <i class="bi bi-calendar-event"></i> 今後のイベント
                 </h5>
+                <a href="{{ route('events.index') }}" class="btn btn-sm btn-outline-light">
+                    一覧を見る <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
             <div class="card-body p-0">
                 @forelse($events as $event)
-                    <div class="px-3 py-3 border-bottom">
+                    <a href="{{ route('events.show', $event) }}" class="d-block px-3 py-3 border-bottom text-decoration-none text-dark list-item-hover">
                         <div class="d-flex justify-content-between align-items-start">
                             <strong>{{ $event->title }}</strong>
-                            <small class="text-muted ms-2 text-nowrap">{{ $event->event_date->format('Y/m/d') }}</small>
+                            <span class="d-flex align-items-center gap-2 ms-2">
+                                <small class="text-muted text-nowrap">{{ $event->event_date->format('Y/m/d') }}</small>
+                                <i class="bi bi-chevron-right text-muted"></i>
+                            </span>
                         </div>
                         @if($event->location)
                             <div class="text-muted small mt-1"><i class="bi bi-geo-alt"></i> {{ $event->location }}</div>
@@ -118,7 +62,7 @@
                         @if($event->deadline)
                             <div class="text-muted small"><i class="bi bi-clock"></i> 申込締切：{{ $event->deadline->format('Y/m/d') }}</div>
                         @endif
-                    </div>
+                    </a>
                 @empty
                     <p class="text-muted p-3 mb-0">現在、予定されているイベントはありません。</p>
                 @endforelse
