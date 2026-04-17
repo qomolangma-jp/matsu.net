@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'approved' => \App\Http\Middleware\RequireApproved::class,
+            'approved'      => \App\Http\Middleware\RequireApproved::class,
+            'master_admin'  => \App\Http\Middleware\RequireMasterAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
