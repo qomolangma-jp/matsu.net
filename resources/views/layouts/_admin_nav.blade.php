@@ -4,7 +4,7 @@
 </div>
 
 <nav class="nav flex-column">
-    <a class="nav-link text-white {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="#">
+    <a class="nav-link text-white {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
         <i class="bi bi-speedometer2"></i> ダッシュボード
     </a>
     <a class="nav-link text-white {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
@@ -21,9 +21,11 @@
     <a class="nav-link text-white {{ request()->routeIs('admin.news.*') ? 'active' : '' }}" href="{{ route('admin.news.index') }}">
         <i class="bi bi-newspaper"></i> ニュース管理
     </a>
-    <a class="nav-link text-white {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}">
-        <i class="bi bi-gear"></i> 設定
-    </a>
+    @if(Auth::check() && Auth::user()->role === 'master_admin')
+        <a class="nav-link text-white {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}">
+            <i class="bi bi-gear"></i> 設定
+        </a>
+    @endif
 </nav>
 
 <div class="mt-auto p-3" style="border-top: 1px solid rgba(255,255,255,0.1);">

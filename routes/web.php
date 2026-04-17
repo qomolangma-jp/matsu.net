@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ReferenceRosterController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,6 +92,9 @@ Route::middleware(['auth', 'approved'])->prefix('events')->name('events.')->grou
 
 // 管理者用ルート
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    // ダッシュボード
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
     // 名簿管理
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserManagementController::class, 'index'])->name('index');

@@ -302,16 +302,24 @@
                 </div>
             </div>
 
-            <!-- LINE情報（表示のみ） -->
+            <!-- LINE情報 -->
             <div class="card mb-4">
                 <div class="card-header">
                     <i class="bi bi-line"></i> LINE情報
                 </div>
                 <div class="card-body">
-                    <small class="text-muted">LINE ID:</small>
-                    <p class="mb-1 text-break">{{ $user->line_id }}</p>
-                    <small class="text-muted">登録日時:</small>
-                    <p class="mb-0">{{ $user->created_at->format('Y年m月d日 H:i') }}</p>
+                    @if($user->line_id)
+                        <small class="text-muted">LINE ID:</small>
+                        <p class="mb-2 text-break font-monospace small">{{ $user->line_id }}</p>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="clear_line_id" id="clearLineId" value="1">
+                            <label class="form-check-label text-danger" for="clearLineId">
+                                LINE IDを削除する（LINE送信対象から外れます）
+                            </label>
+                        </div>
+                    @else
+                        <p class="text-muted mb-0"><i class="bi bi-slash-circle"></i> LINE未連携</p>
+                    @endif
                 </div>
             </div>
         </div>

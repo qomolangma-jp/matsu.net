@@ -263,6 +263,11 @@ class UserManagementController extends Controller
             $categories = $validated['categories'] ?? [];
             unset($validated['categories']);
 
+            // LINE IDのクリア
+            if ($request->boolean('clear_line_id')) {
+                $validated['line_id'] = null;
+            }
+
             $user->update($validated);
 
             // カテゴリーを同期（中間テーブルを更新）
