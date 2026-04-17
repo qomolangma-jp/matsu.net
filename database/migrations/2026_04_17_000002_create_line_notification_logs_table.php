@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('line_notification_logs', function (Blueprint $table) {
+            $table->id();
+            $table->string('notifiable_type');       // App\Models\News or App\Models\Event
+            $table->unsignedBigInteger('notifiable_id');
+            $table->unsignedBigInteger('user_id');
+            $table->timestamps();
+
+            $table->index(['notifiable_type', 'notifiable_id'], 'idx_notifiable');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('line_notification_logs');
+    }
+};

@@ -25,7 +25,8 @@
                         <th style="width: 60px;">ID</th>
                         <th>タイトル</th>
                         <th>対象学年</th>
-                        <th>通知設定</th>
+                        <th>LINE送信</th>
+                        <th>掲載</th>
                         <th>公開日時</th>
                         <th>作成者</th>
                         <th style="width: 150px;">操作</th>
@@ -43,11 +44,19 @@
                                 <span class="badge bg-info">{{ $item->target_years_display }}</span>
                             </td>
                             <td>
-                                @if($item->is_line_notification)
-                                    <span class="badge bg-success">LINE送信済</span>
+                                @if($item->line_sent_count > 0)
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-line"></i> {{ number_format($item->line_sent_count) }}件
+                                    </span>
+                                @else
+                                    <span class="text-muted small">未送信</span>
                                 @endif
+                            </td>
+                            <td>
                                 @if($item->is_top_display)
                                     <span class="badge bg-primary">TOP掲載</span>
+                                @else
+                                    <span class="text-muted small">-</span>
                                 @endif
                             </td>
                             <td>

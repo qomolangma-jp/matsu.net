@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\News;
 use App\Models\Event;
+use App\Models\LineNotificationLog;
 use App\Models\Setting;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +22,88 @@ class LineMessagingService
         $this->channelAccessToken = ($dbToken !== '') 
             ? $dbToken 
             : (config('services.line.messaging_channel_access_token') ?: null);
+    }
+
+    /**
+     * News/Event を対象にLINE送信し、ログに記録する
+     *
+     * @param News|Event $notifiable
+     * @param bool $resendAll true=全員へ再送（既送信含む）  false=未送信のみ
+     * @return array ['success_count', 'failure_count', 'errors', 'target_count']
+     */
+    public function sendNotification($notifiable, bool $resendAll = false): array
+    {
+        // 対象ユーザーのベースクエリ（承認済み・LINE ID あり）
+        $usersQuery = User::approved()->whereNotNull('line_id');
+
+        if ($notifiable instanceof News && !empty($notifiable->target_graduation_years)) {
+            $usersQuery->whereIn('graduation_year', $notifiable->target_graduation_years);
+        } elseif ($notifiable instanceof Event && $notifiable->graduation_year) {
+            $usersQuery->where('graduation_year', $notifiable->graduation_year);
+        }
+
+        if (!$resendAll) {
+            // 既送信ユーザーを除外
+            $sentUserIds = $notifiable->lineNotificationLogs()
+                ->pluck('user_id')
+                ->unique()
+                ->toArray();
+            if (!empty($sentUserIds)) {
+                $usersQuery->whereNotIn('id', $sentUserIds);
+            }
+        }
+
+        $users = $usersQuery->get();
+
+        if ($users->isEmpty()) {
+            return [
+                'success_count' => 0,
+                'failure_count' => 0,
+                'errors'        => [],
+                'target_count'  => 0,
+            ];
+        }
+
+        $messages = $notifiable instanceof News
+            ? $this->buildNewsMessage($notifiable)
+            : $this->buildEventMessage($notifiable);
+
+        $successCount = 0;
+        $failureCount = 0;
+        $errors       = [];
+
+        foreach ($users as $user) {
+            try {
+                $result = $this->sendPushMessage($user->line_id, $messages);
+                if ($result) {
+                    $successCount++;
+                    // 送信ログを記録
+                    LineNotificationLog::create([
+                        'notifiable_type' => get_class($notifiable),
+                        'notifiable_id'   => $notifiable->id,
+                        'user_id'         => $user->id,
+                    ]);
+                } else {
+                    $failureCount++;
+                }
+            } catch (\Exception $e) {
+                $failureCount++;
+                $errors[] = "{$user->full_name}: {$e->getMessage()}";
+                Log::error('LINE送信エラー', [
+                    'user_id'         => $user->id,
+                    'notifiable_type' => get_class($notifiable),
+                    'notifiable_id'   => $notifiable->id,
+                    'error'           => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return [
+            'success_count' => $successCount,
+            'failure_count' => $failureCount,
+            'errors'        => $errors,
+            'target_count'  => $users->count(),
+        ];
     }
 
     /**
@@ -209,12 +292,12 @@ class LineMessagingService
             $text .= "日時：" . $event->event_date->format('Y年m月d日 H:i') . "\n";
         }
         
-        if ($event->event_location) {
-            $text .= "場所：{$event->event_location}\n";
+        if ($event->location) {
+            $text .= "場所：{$event->location}\n";
         }
         
-        if ($event->registration_deadline) {
-            $text .= "締切：" . $event->registration_deadline->format('Y年m月d日') . "\n";
+        if ($event->deadline) {
+            $text .= "締切：" . $event->deadline->format('Y年m月d日') . "\n";
         }
         
         $text .= "\n{$event->description}\n\n";

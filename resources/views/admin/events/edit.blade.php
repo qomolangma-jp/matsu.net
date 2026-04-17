@@ -126,6 +126,49 @@
                         </div>
                     </div>
 
+                    <!-- LINE通知セクション -->
+                    <div class="mb-4 p-3 rounded border border-success bg-light">
+                        <h6 class="mb-3"><i class="bi bi-line text-success"></i> LINE通知</h6>
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="fs-4 fw-bold text-success">{{ $lineSentCount }}</div>
+                                <small class="text-muted">送信済み</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="fs-4 fw-bold text-warning">{{ $lineUnsentCount }}</div>
+                                <small class="text-muted">未送信</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="fs-4 fw-bold text-secondary">{{ $lineTargetCount }}</div>
+                                <small class="text-muted">対象合計</small>
+                            </div>
+                        </div>
+                        @if($lineUnsentCount > 0)
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox"
+                                       id="send_line_to_unsent" name="send_line_to_unsent" value="1">
+                                <label class="form-check-label" for="send_line_to_unsent">
+                                    <i class="bi bi-send"></i>
+                                    未送信の <strong>{{ $lineUnsentCount }}件</strong> のユーザーにLINE送信する
+                                </label>
+                            </div>
+                        @else
+                            <p class="text-success mb-2 small">
+                                <i class="bi bi-check-circle-fill"></i> 全ての対象ユーザーに送信済みです
+                            </p>
+                        @endif
+                        @if($lineSentCount > 0)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       id="send_line_resend_all" name="send_line_resend_all" value="1">
+                                <label class="form-check-label text-warning" for="send_line_resend_all">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    全員（{{ $lineTargetCount }}件）に再送する（既送信ユーザーへも再送）
+                                </label>
+                            </div>
+                        @endif
+                    </div>
+
                     <!-- ボタン -->
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">

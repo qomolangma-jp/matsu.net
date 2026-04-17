@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\LineNotificationLog;
 
 class Event extends Model
 {
@@ -39,6 +40,14 @@ class Event extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * LINE通知ログ
+     */
+    public function lineNotificationLogs()
+    {
+        return $this->morphMany(LineNotificationLog::class, 'notifiable');
     }
 
     /**

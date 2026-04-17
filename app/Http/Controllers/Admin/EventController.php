@@ -33,7 +33,9 @@ class EventController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
-        $query = Event::with('creator')->filterByPermission($user);
+        $query = Event::with('creator')
+            ->withCount('lineNotificationLogs as line_sent_count')
+            ->filterByPermission($user);
 
         // ステータスフィルタ
         $status = $request->input('status');
@@ -114,19 +116,30 @@ class EventController extends Controller
             ]);
 
             // LINE通知送信
+            $lineMsg = '';
             if ($request->boolean('send_line_notification') && $request->boolean('is_published')) {
-                $this->sendLineNotification($event);
+                $result = $this->lineService->sendNotification($event, false);
+                $lineMsg = "LINE通知: {$result['success_count']}件送信";
+                if ($result['failure_count'] > 0) {
+                    $lineMsg .= "（{$result['failure_count']}件失敗）";
+                }
+                Log::info('イベントLINE送信完了', [
+                    'event_id'      => $event->id,
+                    'success_count' => $result['success_count'],
+                    'failure_count' => $result['failure_count'],
+                ]);
             }
 
             DB::commit();
 
+            $successMsg = 'イベントを作成しました。' . ($lineMsg ? ' ' . $lineMsg : '');
             return redirect()->route('admin.events.index')
-                ->with('success', 'イベントを作成しました。');
+                ->with('success', $successMsg);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('イベント作成エラー', [
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
                 'user_id' => $user->id,
             ]);
 
@@ -174,21 +187,25 @@ class EventController extends Controller
         $pendingUsers = $targetUsersQuery->whereNotIn('id', $respondedUserIds)->get();
 
         $stats = [
-            'total_target' => $totalTargetUsers,
-            'attending' => $attendingUsers->count(),
-            'absent' => $absentUsers->count(),
-            'pending' => $pendingUsers->count(),
-            'response_rate' => $totalTargetUsers > 0 
-                ? round(($attendances->count() / $totalTargetUsers) * 100, 1) 
+            'total_target'  => $totalTargetUsers,
+            'attending'     => $attendingUsers->count(),
+            'absent'        => $absentUsers->count(),
+            'pending'       => $pendingUsers->count(),
+            'response_rate' => $totalTargetUsers > 0
+                ? round(($attendances->count() / $totalTargetUsers) * 100, 1)
                 : 0,
         ];
+
+        // LINE送信件数
+        $lineSentCount = $event->lineNotificationLogs()->distinct('user_id')->count('user_id');
 
         return view('admin.events.show', compact(
             'event',
             'attendingUsers',
             'absentUsers',
             'pendingUsers',
-            'stats'
+            'stats',
+            'lineSentCount'
         ));
     }
 
@@ -211,7 +228,16 @@ class EventController extends Controller
 
         $graduationYears = $this->getGraduationYearsList($user);
 
-        return view('admin.events.edit', compact('event', 'graduationYears'));
+        // LINE送信統計
+        $lineSentCount   = $event->lineNotificationLogs()->distinct('user_id')->count('user_id');
+        $targetUsersQuery = User::approved()->whereNotNull('line_id');
+        if ($event->graduation_year) {
+            $targetUsersQuery->where('graduation_year', $event->graduation_year);
+        }
+        $lineTargetCount = $targetUsersQuery->count();
+        $lineUnsentCount = max(0, $lineTargetCount - $lineSentCount);
+
+        return view('admin.events.edit', compact('event', 'graduationYears', 'lineSentCount', 'lineTargetCount', 'lineUnsentCount'));
     }
 
     /**
@@ -232,38 +258,53 @@ class EventController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'event_date' => 'required|date',
-            'location' => 'nullable|string|max:255',
-            'deadline' => 'nullable|date|before:event_date',
-            'capacity' => 'nullable|integer|min:1',
-            'is_published' => 'boolean',
+            'title'                => 'required|string|max:255',
+            'description'          => 'required|string',
+            'event_date'           => 'required|date',
+            'location'             => 'nullable|string|max:255',
+            'deadline'             => 'nullable|date|before:event_date',
+            'capacity'             => 'nullable|integer|min:1',
+            'is_published'         => 'boolean',
+            'send_line_to_unsent'  => 'nullable|boolean',
+            'send_line_resend_all' => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
         try {
             $event->update([
-                'title' => $validated['title'],
+                'title'       => $validated['title'],
                 'description' => $validated['description'],
-                'event_date' => $validated['event_date'],
-                'location' => $validated['location'],
-                'deadline' => $validated['deadline'],
-                'capacity' => $validated['capacity'],
-                'is_published' => $request->boolean('is_published'),
+                'event_date'  => $validated['event_date'],
+                'location'    => $validated['location'],
+                'deadline'    => $validated['deadline'],
+                'capacity'    => $validated['capacity'],
+                'is_published'=> $request->boolean('is_published'),
             ]);
+
+            // LINE送信処理（更新時）
+            $lineMsg = '';
+            if ($request->boolean('send_line_resend_all')) {
+                $result  = $this->lineService->sendNotification($event, true);
+                $lineMsg = "LINE再送: {$result['success_count']}件";
+                if ($result['failure_count'] > 0) { $lineMsg .= "（{$result['failure_count']}件失敗）"; }
+            } elseif ($request->boolean('send_line_to_unsent')) {
+                $result  = $this->lineService->sendNotification($event, false);
+                $lineMsg = "LINE送信: {$result['success_count']}件";
+                if ($result['failure_count'] > 0) { $lineMsg .= "（{$result['failure_count']}件失敗）"; }
+            }
 
             DB::commit();
 
+            $successMsg = 'イベントを更新しました。' . ($lineMsg ? ' ' . $lineMsg : '');
             return redirect()->route('admin.events.show', $event->id)
-                ->with('success', 'イベントを更新しました。');
+                ->with('success', $successMsg);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('イベント更新エラー', [
-                'error' => $e->getMessage(),
+                'error'    => $e->getMessage(),
                 'event_id' => $event->id,
-                'user_id' => $user->id,
+                'user_id'  => $user->id,
             ]);
 
             return back()->withErrors(['error' => 'イベントの更新に失敗しました。'])->withInput();
@@ -378,38 +419,6 @@ class EventController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
-    }
-
-    /**
-     * LINE通知送信
-     */
-    private function sendLineNotification(Event $event)
-    {
-        // 対象ユーザーを取得
-        $usersQuery = User::approved()->whereNotNull('line_id');
-
-        if ($event->graduation_year) {
-            $usersQuery->where('graduation_year', $event->graduation_year);
-        }
-
-        $users = $usersQuery->get();
-
-        if ($users->isEmpty()) {
-            Log::warning('LINE送信対象ユーザーが見つかりません', [
-                'event_id' => $event->id,
-                'target_year' => $event->graduation_year,
-            ]);
-            return;
-        }
-
-        // LINE送信
-        $result = $this->lineService->sendEventNotification($event, $users);
-
-        Log::info('LINE通知送信完了', [
-            'event_id' => $event->id,
-            'success_count' => $result['success_count'],
-            'failure_count' => $result['failure_count'],
-        ]);
     }
 
     /**

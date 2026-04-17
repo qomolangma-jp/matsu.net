@@ -22,11 +22,12 @@
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 60px;">ID</th>
+                        <th>ID</th>
                         <th>タイトル</th>
                         <th>開催日時</th>
                         <th>対象学年</th>
                         <th>出欠状況</th>
+                        <th>LINE送信</th>
                         <th>公開</th>
                         <th style="width: 180px;">操作</th>
                     </tr>
@@ -62,6 +63,15 @@
                                     <i class="bi bi-people"></i> 
                                     出席 <strong>{{ $attendingCount }}</strong> / 回答 {{ $totalCount }}
                                 </small>
+                            </td>
+                            <td>
+                                @if(isset($event->line_sent_count) && $event->line_sent_count > 0)
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-line"></i> {{ number_format($event->line_sent_count) }}件
+                                    </span>
+                                @else
+                                    <span class="text-muted small">未送信</span>
+                                @endif
                             </td>
                             <td>
                                 @if($event->is_published)

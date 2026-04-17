@@ -73,28 +73,34 @@
 
 <!-- 統計情報 -->
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-md col-sm-6 mb-2">
         <div class="stats-card" style="background: linear-gradient(135deg, #6c757d, #495057);">
             <small>対象者数</small>
             <h3>{{ number_format($stats['total_target']) }}</h3>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md col-sm-6 mb-2">
         <div class="stats-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
             <small>出席</small>
             <h3>{{ number_format($stats['attending']) }}</h3>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md col-sm-6 mb-2">
         <div class="stats-card" style="background: linear-gradient(135deg, #dc3545, #c82333);">
             <small>欠席</small>
             <h3>{{ number_format($stats['absent']) }}</h3>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md col-sm-6 mb-2">
         <div class="stats-card" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
             <small>未回答</small>
             <h3>{{ number_format($stats['pending']) }}</h3>
+        </div>
+    </div>
+    <div class="col-md col-sm-6 mb-2">
+        <div class="stats-card" style="background: linear-gradient(135deg, #00b300, #06c755);">
+            <small>LINE送信</small>
+            <h3>{{ number_format($lineSentCount) }}</h3>
         </div>
     </div>
 </div>

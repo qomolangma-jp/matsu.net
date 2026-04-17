@@ -33,6 +33,7 @@ class NewsController extends Controller
         }
 
         $query = News::with('creator')
+            ->withCount('lineNotificationLogs as line_sent_count')
             ->orderBy('created_at', 'desc');
 
         // 学年管理者は自学年関連のニュースのみ
@@ -116,15 +117,26 @@ class NewsController extends Controller
                 'created_by' => $user->id,
             ]);
 
-            // LINE通知送信
+            // LINE通知送信（作成時）
+            $lineMsg = '';
             if ($request->boolean('is_line_notification')) {
-                $this->sendLineNotification($news);
+                $result = $this->lineService->sendNotification($news, false);
+                $lineMsg = "LINE通知: {$result['success_count']}件送信";
+                if ($result['failure_count'] > 0) {
+                    $lineMsg .= "（{$result['failure_count']}件失敗）";
+                }
+                Log::info('ニュースLINE送信完了', [
+                    'news_id' => $news->id,
+                    'success_count' => $result['success_count'],
+                    'failure_count' => $result['failure_count'],
+                ]);
             }
 
             DB::commit();
 
+            $successMsg = 'ニュースを作成しました。' . ($lineMsg ? ' ' . $lineMsg : '');
             return redirect()->route('admin.news.index')
-                ->with('success', 'ニュースを作成しました。');
+                ->with('success', $successMsg);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -158,7 +170,16 @@ class NewsController extends Controller
 
         $graduationYears = $this->getGraduationYearsList($user);
 
-        return view('admin.news.edit', compact('news', 'graduationYears'));
+        // LINE送信統計
+        $lineSentCount = $news->lineNotificationLogs()->distinct('user_id')->count('user_id');
+        $targetUsersQuery = User::approved()->whereNotNull('line_id');
+        if (!empty($news->target_graduation_years)) {
+            $targetUsersQuery->whereIn('graduation_year', $news->target_graduation_years);
+        }
+        $lineTargetCount  = $targetUsersQuery->count();
+        $lineUnsentCount  = max(0, $lineTargetCount - $lineSentCount);
+
+        return view('admin.news.edit', compact('news', 'graduationYears', 'lineSentCount', 'lineTargetCount', 'lineUnsentCount'));
     }
 
     /**
@@ -181,11 +202,13 @@ class NewsController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string',
-            'target_graduation_years' => 'nullable|array',
-            'target_graduation_years.*' => 'integer|min:1948',
-            'is_top_display' => 'boolean',
+            'title'                    => 'required|string|max:255',
+            'body'                     => 'required|string',
+            'target_graduation_years'  => 'nullable|array',
+            'target_graduation_years.*'=> 'integer|min:1948',
+            'is_top_display'           => 'boolean',
+            'send_line_to_unsent'      => 'nullable|boolean',
+            'send_line_resend_all'     => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
@@ -200,21 +223,38 @@ class NewsController extends Controller
             }
 
             $news->update([
-                'title' => $validated['title'],
-                'body' => $validated['body'],
-                'target_graduation_years' => !empty($targetYears) ? $targetYears : null,
-                'is_top_display' => $request->boolean('is_top_display'),
+                'title'                  => $validated['title'],
+                'body'                   => $validated['body'],
+                'target_graduation_years'=> !empty($targetYears) ? $targetYears : null,
+                'is_top_display'         => $request->boolean('is_top_display'),
             ]);
+
+            // LINE送信処理（更新時）
+            $lineMsg = '';
+            if ($request->boolean('send_line_resend_all')) {
+                $result = $this->lineService->sendNotification($news, true);
+                $lineMsg = "LINE再送: {$result['success_count']}件送信";
+                if ($result['failure_count'] > 0) {
+                    $lineMsg .= "（{$result['failure_count']}件失敗）";
+                }
+            } elseif ($request->boolean('send_line_to_unsent')) {
+                $result = $this->lineService->sendNotification($news, false);
+                $lineMsg = "LINE送信: {$result['success_count']}件送信";
+                if ($result['failure_count'] > 0) {
+                    $lineMsg .= "（{$result['failure_count']}件失敗）";
+                }
+            }
 
             DB::commit();
 
+            $successMsg = 'ニュースを更新しました。' . ($lineMsg ? ' ' . $lineMsg : '');
             return redirect()->route('admin.news.index')
-                ->with('success', 'ニュースを更新しました。');
+                ->with('success', $successMsg);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('ニュース更新エラー', [
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
                 'news_id' => $news->id,
                 'user_id' => $user->id,
             ]);
@@ -257,38 +297,6 @@ class NewsController extends Controller
 
             return back()->withErrors(['error' => 'ニュースの削除に失敗しました。']);
         }
-    }
-
-    /**
-     * LINE通知送信
-     */
-    private function sendLineNotification(News $news)
-    {
-        // 対象ユーザーを取得
-        $usersQuery = User::approved()->whereNotNull('line_id');
-
-        if (!empty($news->target_graduation_years)) {
-            $usersQuery->whereIn('graduation_year', $news->target_graduation_years);
-        }
-
-        $users = $usersQuery->get();
-
-        if ($users->isEmpty()) {
-            Log::warning('LINE送信対象ユーザーが見つかりません', [
-                'news_id' => $news->id,
-                'target_years' => $news->target_graduation_years,
-            ]);
-            return;
-        }
-
-        // LINE送信
-        $result = $this->lineService->sendNewsNotification($news, $users);
-
-        Log::info('LINE通知送信完了', [
-            'news_id' => $news->id,
-            'success_count' => $result['success_count'],
-            'failure_count' => $result['failure_count'],
-        ]);
     }
 
     /**
