@@ -20,24 +20,50 @@
     </div>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
-        var LIFF_ID = '{{ $liffId }}';
+        var LIFF_ID   = '{{ $liffId }}';
+        var IS_LOGGED_IN = {{ Auth::check() ? 'true' : 'false' }};
+
+        // liff.state から遷移先パスを取得
+        function getDestPath() {
+            var params = new URLSearchParams(window.location.search);
+            var state  = params.get('liff.state');
+            if (state && /^\/(events|news)\/\d+/.test(state)) {
+                return state;
+            }
+            return null;
+        }
 
         liff.init({ liffId: LIFF_ID })
             .then(function () {
-                // liff.state パラメータ（ディープリンク）があればそのパスへ遷移
-                var params = new URLSearchParams(window.location.search);
-                var state  = params.get('liff.state');
-                if (state && (state.startsWith('/events/') || state.startsWith('/news/'))) {
-                    window.location.replace(state);
+                var destPath = getDestPath();
+
+                // ログイン済みなら直接遷移
+                if (IS_LOGGED_IN) {
+                    window.location.replace(destPath || '/mypage');
+                    return;
+                }
+
+                // 未ログイン：LIFFからLINE IDを取得してサーバーで認証
+                if (liff.isLoggedIn()) {
+                    return liff.getProfile()
+                        .then(function (profile) {
+                            var lineId   = profile.userId;
+                            var redirect = destPath || '/mypage';
+                            window.location.replace(
+                                '/auth/line?line_id=' + encodeURIComponent(lineId)
+                                + '&redirect=' + encodeURIComponent(redirect)
+                            );
+                        });
                 } else {
-                    window.location.replace('/register');
+                    // LIFFログインも未済（外部ブラウザ等）
+                    window.location.replace(destPath || '/mypage');
                 }
             })
             .catch(function (err) {
                 document.querySelector('.box p').textContent = 'エラーが発生しました';
                 document.getElementById('msg').textContent = err.message;
                 setTimeout(function () {
-                    window.location.replace('/register');
+                    window.location.replace('/mypage');
                 }, 3000);
             });
     </script>
