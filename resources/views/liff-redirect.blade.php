@@ -47,8 +47,8 @@
                             );
                         });
                 } else {
-                    // LIFFログインも未済（外部ブラウザ等）
-                    window.location.replace(destPath || '/mypage');
+                    // LIFF未ログイン → LINE OAuthを起動してこのページに戻ってくる
+                    liff.login();
                 }
             })
             .catch(function (err) {
