@@ -22,35 +22,33 @@
     <script>
         var LIFF_ID      = '{{ $liffId }}';
         var IS_LOGGED_IN = {{ Auth::check() ? 'true' : 'false' }};
+        var SESSION_KEY  = 'liff_dest_path';
 
-        var msgEl = document.getElementById('msg');
-        function log(txt) {
-            msgEl.innerHTML += txt + '<br>';
-        }
-
-        // liff.init() 前に liff.state を取得する（init後にURLが書き換わるため）
+        // liff.init() 前に liff.state を取得（init後にURLが書き換わるため）
         var _rawState = new URLSearchParams(window.location.search).get('liff.state');
-        var destPath  = (_rawState && /^\/(events|news)\/\d+$/.test(_rawState)) ? _rawState : null;
+        var destPath  = (_rawState && /^\/(events|news)\/\d+$/.test(_rawState))
+                            ? _rawState
+                            : sessionStorage.getItem(SESSION_KEY);  // liff.login()後の復元
 
-        log('destPath: ' + destPath);
-        log('IS_LOGGED_IN: ' + IS_LOGGED_IN);
+        // destPath が取れた場合はsessionStorageに保存（liff.login()リダイレクトに備える）
+        if (destPath) {
+            sessionStorage.setItem(SESSION_KEY, destPath);
+        }
 
         liff.init({ liffId: LIFF_ID })
             .then(function () {
-                log('liff.isLoggedIn: ' + liff.isLoggedIn());
-
-                // ログイン済みなら直接遷移
+                // Laravelログイン済みなら直接遷移
                 if (IS_LOGGED_IN) {
+                    sessionStorage.removeItem(SESSION_KEY);
                     window.location.replace(destPath || '/mypage');
                     return;
                 }
 
                 // 未ログイン：LIFFセッションがあればLINE IDを取得してサーバー認証
                 if (liff.isLoggedIn()) {
-                    log('getProfile呼び出し中...');
                     return liff.getProfile()
                         .then(function (profile) {
-                            log('LINE ID取得: ' + profile.userId.substring(0, 6) + '...');
+                            sessionStorage.removeItem(SESSION_KEY);
                             var lineId   = profile.userId;
                             var redirect = destPath || '/mypage';
                             window.location.replace(
@@ -59,13 +57,14 @@
                             );
                         });
                 } else {
-                    log('LIFF未ログイン → liff.login()起動');
+                    // LIFF未ログイン → LINE OAuthを起動（戻り後に同ページを再レンダリング）
                     liff.login();
                 }
             })
             .catch(function (err) {
                 document.querySelector('.box p').textContent = 'エラーが発生しました';
-                log('ERROR: ' + err.message);
+                document.getElementById('msg').textContent = err.message;
+                setTimeout(function () { window.location.replace('/mypage'); }, 3000);
             });
     </script>
 </body>

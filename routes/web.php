@@ -27,7 +27,12 @@ use App\Http\Controllers\Admin\DashboardController;
 Route::get('/', function (\Illuminate\Http\Request $request) {
     // liff.state パラメータがある場合はLIFF経由のディープリンク → liff-redirectを表示
     // ※ PHPはクエリ名の「.」を「_」に変換するため liff_state でチェック
-    if ($request->has('liff_state')) {
+    // ※ liff.login()後のOAuth戻りはliff.state がURLにない場合あり → code パラメータで判定
+    $isLiffAccess = $request->has('liff_state')
+                 || $request->has('code')   // LINE OAuth コールバック
+                 || $request->has('liff.state'); // 念のため両方チェック
+
+    if ($isLiffAccess) {
         $liffId = \App\Models\Setting::get('liff_id', config('services.line.liff_id', ''));
         return view('liff-redirect', compact('liffId'));
     }
