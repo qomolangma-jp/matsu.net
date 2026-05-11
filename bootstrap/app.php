@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'approved'      => \App\Http\Middleware\RequireApproved::class,
             'master_admin'  => \App\Http\Middleware\RequireMasterAdmin::class,

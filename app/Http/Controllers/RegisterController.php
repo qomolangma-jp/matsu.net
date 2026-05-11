@@ -89,6 +89,7 @@ class RegisterController extends Controller
         if ($existingUser) {
             Auth::login($existingUser, true); // true = remember_me
             $request->session()->regenerate(); // セッション固定攻撃対策と保存の明示的実行
+            $request->session()->save();       // Cookie発行前に明示的保存
 
             Log::info('LIFF：既存ユーザーを自動ログイン', [
                 'line_id'  => $lineId,
@@ -96,6 +97,7 @@ class RegisterController extends Controller
                 'name'     => $existingUser->full_name,
                 'redirect' => $safePath,
                 'new_session_id' => $request->session()->getId(),
+                'is_secure' => $request->secure(),
             ]);
 
             if (in_array($existingUser->role, ['master_admin', 'year_admin'])) {
