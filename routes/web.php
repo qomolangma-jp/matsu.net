@@ -25,12 +25,13 @@ use App\Http\Controllers\Admin\DashboardController;
 // "/" でそのまま登録フォームを返す（リダイレクトしない）
 // liff.init() はエンドポイント URL 上で実行される必要があるため
 Route::get('/', function (\Illuminate\Http\Request $request) {
-    // liff.state パラメータがある場合はLIFF経由のディープリンク → liff-redirectを表示
-    // ※ PHPはクエリ名の「.」を「_」に変換するため liff_state でチェック
-    // ※ liff.login()後のOAuth戻りはliff.state がURLにない場合あり → code パラメータで判定
-    $isLiffAccess = $request->has('liff_state')
-                 || $request->has('code')   // LINE OAuth コールバック
-                 || $request->has('liff.state'); // 念のため両方チェック
+    \Illuminate\Support\Facades\Log::debug('Home Request QueryString:', ['qs' => $request->getQueryString()]);
+
+    $qs = $request->getQueryString() ?? '';
+    // liff.state があるか、LINE OAuth の code があるか、または LIFF特有の liffClientId がある場合
+    $isLiffAccess = str_contains($qs, 'liff.state=')
+                 || str_contains($qs, 'code=')
+                 || str_contains($qs, 'liffClientId=');
 
     if ($isLiffAccess) {
         $liffId = \App\Models\Setting::get('liff_id', config('services.line.liff_id', ''));
