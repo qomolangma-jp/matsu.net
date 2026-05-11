@@ -115,6 +115,16 @@
                 <div class="form-text">{{ $byKeyL['line_channel_access_token']['description'] ?? '' }}</div>
                 @error('line_channel_access_token')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
+
+            <div class="mb-3" style="max-width: 600px;">
+                <label for="liff_id" class="form-label">LIFF ID</label>
+                <input type="text" class="form-control @error('liff_id') is-invalid @enderror"
+                       id="liff_id" name="liff_id"
+                       value="{{ old('liff_id', $byKeyL['liff_id']['value'] ?? '') }}"
+                       maxlength="100" placeholder="1234567890-abcdefgh">
+                <div class="form-text">{{ $byKeyL['liff_id']['description'] ?? 'LIFF IDを設定すると、LINE通知のリンクがLIFF URL経由（LINE内ブラウザで開く）になります。' }}</div>
+                @error('liff_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
         </div>
     </div>
 

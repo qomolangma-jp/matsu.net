@@ -258,16 +258,27 @@ class LineMessagingService
     }
 
     /**
+     * LIFF経由のURLを生成する。LIFF IDが未設定の場合は通常URLを返す。
+     */
+    private function buildUrl(string $path): string
+    {
+        $liffId = Setting::get('liff_id', '');
+        if (!empty($liffId)) {
+            return 'https://liff.line.me/' . $liffId . '?liff.state=' . urlencode($path);
+        }
+        return url($path);
+    }
+
+    /**
      * ニュース用メッセージを構築
-     * 
-     * @param News $news
-     * @return array
      */
     private function buildNewsMessage(News $news): array
     {
+        $url  = $this->buildUrl('/news/' . $news->id);
         $text = "【松.net お知らせ】\n\n";
         $text .= "{$news->title}\n\n";
         $text .= $news->body;
+        $text .= "\n\n詳細はこちら▶︎ {$url}";
 
         return [
             [
@@ -279,29 +290,27 @@ class LineMessagingService
 
     /**
      * イベント用メッセージを構築
-     * 
-     * @param Event $event
-     * @return array
      */
     private function buildEventMessage(Event $event): array
     {
+        $url  = $this->buildUrl('/events/' . $event->id);
         $text = "【松.net イベントのお知らせ】\n\n";
         $text .= "📅 {$event->title}\n\n";
-        
+
         if ($event->event_date) {
             $text .= "日時：" . $event->event_date->format('Y年m月d日 H:i') . "\n";
         }
-        
+
         if ($event->location) {
             $text .= "場所：{$event->location}\n";
         }
-        
+
         if ($event->deadline) {
             $text .= "締切：" . $event->deadline->format('Y年m月d日') . "\n";
         }
-        
+
         $text .= "\n{$event->description}\n\n";
-        $text .= "詳細・出欠回答はこちら▶︎ " . url('/events/' . $event->id);
+        $text .= "詳細・出欠回答はこちら▶︎ {$url}";
 
         return [
             [

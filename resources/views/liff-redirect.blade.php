@@ -24,10 +24,14 @@
 
         liff.init({ liffId: LIFF_ID })
             .then(function () {
-                // init 完了 → /register へ移動
-                // liff.state がある場合は SDK が自動で遷移する
-                // ない場合（LINE 内ブラウザ直接アクセス等）は手動で飛ばす
-                window.location.replace('/register');
+                // liff.state パラメータ（ディープリンク）があればそのパスへ遷移
+                var params = new URLSearchParams(window.location.search);
+                var state  = params.get('liff.state');
+                if (state && (state.startsWith('/events/') || state.startsWith('/news/'))) {
+                    window.location.replace(state);
+                } else {
+                    window.location.replace('/register');
+                }
             })
             .catch(function (err) {
                 document.querySelector('.box p').textContent = 'エラーが発生しました';

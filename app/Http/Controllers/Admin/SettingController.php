@@ -23,6 +23,7 @@ class SettingController extends Controller
             'registration_open'           => ['nullable', 'boolean'],
             'registration_closed_message' => ['nullable', 'string', 'max:1000'],
             'line_channel_access_token'   => ['nullable', 'string', 'max:500'],
+            'liff_id'                     => ['nullable', 'string', 'max:100'],
         ];
 
         $validated = $request->validate($rules);
