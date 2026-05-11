@@ -182,36 +182,18 @@
                                     <span class="badge bg-secondary">却下</span>
                                 @endif
                             </td>
-                            <td>
-                                <div class="d-flex gap-1 flex-wrap">
-                                    <a href="{{ route('admin.users.edit', $user) }}"
-                                       class="btn btn-outline-primary btn-sm"
-                                       title="編集">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-
-                                    @if($user->approval_status === 'pending')
-                                        <button type="button"
-                                                class="btn btn-success btn-sm"
-                                                onclick="approveUser({{ $user->id }}, '{{ $user->full_name }}')"
-                                                title="承認">
-                                            <i class="bi bi-check"></i>
-                                        </button>
-                                        <button type="button"
-                                                class="btn btn-danger btn-sm"
-                                                onclick="rejectUser({{ $user->id }}, '{{ $user->full_name }}')"
-                                                title="却下">
-                                            <i class="bi bi-x"></i>
-                                        </button>
-                                    @endif
-
-                                    <button type="button"
-                                            class="btn btn-outline-danger btn-sm"
-                                            title="削除"
-                                            onclick="deleteUser({{ $user->id }}, '{{ $user->full_name }}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
+                            <td style="white-space:nowrap;">
+                                <a href="{{ route('admin.users.edit', $user) }}"
+                                   class="btn btn-outline-primary btn-sm"
+                                   title="編集">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm"
+                                        title="削除"
+                                        onclick="deleteUser({{ $user->id }}, '{{ $user->full_name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     @empty

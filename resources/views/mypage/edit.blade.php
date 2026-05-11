@@ -95,15 +95,39 @@
 
                     <!-- 生年月日 -->
                     <div class="mb-3">
-                        <label for="birthDate" class="form-label required">生年月日</label>
-                        <input type="date" 
-                               class="form-control @error('birth_date') is-invalid @enderror" 
-                               id="birthDate" 
-                               name="birth_date" 
-                               value="{{ old('birth_date', $user->birth_date ? $user->birth_date->format('Y-m-d') : '') }}" 
-                               required>
+                        <label class="form-label required">生年月日</label>
+                        @php
+                            $currentYear  = (int) date('Y');
+                            $minYear      = $currentYear - 99;
+                            $maxYear      = $currentYear - 15;
+                            $oldBirth     = old('birth_date', $user->birth_date ? $user->birth_date->format('Y-m-d') : '');
+                            $oldBirthYear  = $oldBirth ? (int) substr($oldBirth, 0, 4) : '';
+                            $oldBirthMonth = $oldBirth ? (int) substr($oldBirth, 5, 2) : '';
+                            $oldBirthDay   = $oldBirth ? (int) substr($oldBirth, 8, 2) : '';
+                        @endphp
+                        <input type="hidden" name="birth_date" id="birthDate" value="{{ $oldBirth }}">
+                        <div class="d-flex gap-2 align-items-center">
+                            <select id="birthYear" class="form-select @error('birth_date') is-invalid @enderror" style="flex:2;">
+                                <option value="">年</option>
+                                @for($y = $maxYear; $y >= $minYear; $y--)
+                                    <option value="{{ $y }}" {{ $oldBirthYear == $y ? 'selected' : '' }}>{{ $y }}年</option>
+                                @endfor
+                            </select>
+                            <select id="birthMonth" class="form-select @error('birth_date') is-invalid @enderror" style="flex:1;">
+                                <option value="">月</option>
+                                @for($m = 1; $m <= 12; $m++)
+                                    <option value="{{ $m }}" {{ $oldBirthMonth == $m ? 'selected' : '' }}>{{ $m }}月</option>
+                                @endfor
+                            </select>
+                            <select id="birthDay" class="form-select @error('birth_date') is-invalid @enderror" style="flex:1;">
+                                <option value="">日</option>
+                                @for($d = 1; $d <= 31; $d++)
+                                    <option value="{{ $d }}" {{ $oldBirthDay == $d ? 'selected' : '' }}>{{ $d }}日</option>
+                                @endfor
+                            </select>
+                        </div>
                         @error('birth_date')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -219,6 +243,24 @@ document.getElementById('searchAddressBtn')?.addEventListener('click', function(
             alert('住所検索に失敗しました');
         });
 });
+
+(function () {
+    const yearSel  = document.getElementById('birthYear');
+    const monthSel = document.getElementById('birthMonth');
+    const daySel   = document.getElementById('birthDay');
+    const hidden   = document.getElementById('birthDate');
+
+    function updateHidden() {
+        const y = yearSel.value;
+        const m = String(monthSel.value).padStart(2, '0');
+        const d = String(daySel.value).padStart(2, '0');
+        hidden.value = (y && m && d) ? `${y}-${m}-${d}` : '';
+    }
+
+    yearSel.addEventListener('change', updateHidden);
+    monthSel.addEventListener('change', updateHidden);
+    daySel.addEventListener('change', updateHidden);
+})();
 </script>
 @endpush
 @endsection
