@@ -123,6 +123,11 @@
             color: #dc3545;
         }
 
+        ::placeholder {
+            color: #bcc3cb !important;
+            opacity: 1;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 display: none; /* オフキャンバスで代替 */

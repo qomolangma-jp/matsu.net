@@ -81,6 +81,11 @@
         .list-item-hover:active {
             background-color: #f0f7f0 !important;
         }
+
+        ::placeholder {
+            color: #bcc3cb !important;
+            opacity: 1;
+        }
     </style>
     
     @stack('styles')

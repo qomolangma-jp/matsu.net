@@ -24,11 +24,17 @@ use App\Http\Controllers\Admin\DashboardController;
 // トップページ = LIFF エンドポイント URL
 // "/" でそのまま登録フォームを返す（リダイレクトしない）
 // liff.init() はエンドポイント URL 上で実行される必要があるため
-Route::get('/', function () {
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    // liff.state パラメータがある場合はLIFF経由のディープリンク → liff-redirectを表示
+    if ($request->has('liff.state')) {
+        $liffId = \App\Models\Setting::get('liff_id', config('services.line.liff_id', ''));
+        return view('liff-redirect', compact('liffId'));
+    }
+
     if (Auth::check()) {
         return redirect()->route('mypage.index');
     }
-    return app(\App\Http\Controllers\RegisterController::class)->showForm(request());
+    return app(\App\Http\Controllers\RegisterController::class)->showForm($request);
 })->name('home');
 
 // 管理者ログイン
