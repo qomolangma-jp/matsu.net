@@ -71,9 +71,14 @@ class RegisterController extends Controller
     public function authWithLine(Request $request)
     {
         $lineId   = $request->input('line_id');
-        // 遷移先（/events/3 など）。安全のため /events/ か /news/ か /mypage のみ許可
         $redirect = $request->input('redirect', '');
         $safePath = preg_match('#^/(events|news)/\d+$#', $redirect) ? $redirect : '/mypage';
+
+        Log::info('authWithLine アクセス', [
+            'line_id' => $lineId,
+            'redirect' => $redirect,
+            'session_id' => $request->session()->getId(),
+        ]);
 
         if (!$lineId) {
             return redirect()->route('register.form');
@@ -82,13 +87,15 @@ class RegisterController extends Controller
         $existingUser = User::where('line_id', $lineId)->first();
 
         if ($existingUser) {
-            Auth::login($existingUser);
+            Auth::login($existingUser, true); // true = remember_me
+            $request->session()->regenerate(); // セッション固定攻撃対策と保存の明示的実行
 
             Log::info('LIFF：既存ユーザーを自動ログイン', [
                 'line_id'  => $lineId,
                 'user_id'  => $existingUser->id,
                 'name'     => $existingUser->full_name,
                 'redirect' => $safePath,
+                'new_session_id' => $request->session()->getId(),
             ]);
 
             if (in_array($existingUser->role, ['master_admin', 'year_admin'])) {
@@ -100,6 +107,7 @@ class RegisterController extends Controller
                 ->with('success', "おかえりなさい、{$existingUser->full_name}さん");
         }
 
+        Log::info('LIFF：未登録ユーザーのため登録フォームへ', ['line_id' => $lineId]);
         // 未登録：登録フォームへ（line_id を引き継ぐ）
         return redirect()->route('register.form', ['line_id' => $lineId]);
     }

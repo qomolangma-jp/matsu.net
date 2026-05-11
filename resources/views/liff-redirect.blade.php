@@ -62,9 +62,10 @@
                 }
             })
             .catch(function (err) {
-                document.querySelector('.box p').textContent = 'エラーが発生しました';
-                document.getElementById('msg').textContent = err.message;
-                setTimeout(function () { window.location.replace('/mypage'); }, 3000);
+                document.querySelector('.box p').innerHTML = '<span style="color:red;font-weight:bold;">エラーが発生しました</span><br><br>画面のスクリーンショットを撮って管理者に報告するか、URLを確認してください。';
+                document.getElementById('msg').innerHTML = '<span style="color:red">' + err.message + '</span>';
+                // 調査のため、エラー時は自動リダイレクトを停止します
+                // setTimeout(function () { window.location.replace('/mypage'); }, 3000);
             });
     </script>
 </body>
