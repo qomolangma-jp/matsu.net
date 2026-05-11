@@ -20,30 +20,22 @@
     </div>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
-        var LIFF_ID   = '{{ $liffId }}';
+        var LIFF_ID      = '{{ $liffId }}';
         var IS_LOGGED_IN = {{ Auth::check() ? 'true' : 'false' }};
 
-        // liff.state から遷移先パスを取得
-        function getDestPath() {
-            var params = new URLSearchParams(window.location.search);
-            var state  = params.get('liff.state');
-            if (state && /^\/(events|news)\/\d+/.test(state)) {
-                return state;
-            }
-            return null;
-        }
+        // liff.init() 前に liff.state を取得する（init後にURLが書き換わるため）
+        var _rawState = new URLSearchParams(window.location.search).get('liff.state');
+        var destPath  = (_rawState && /^\/(events|news)\/\d+$/.test(_rawState)) ? _rawState : null;
 
         liff.init({ liffId: LIFF_ID })
             .then(function () {
-                var destPath = getDestPath();
-
                 // ログイン済みなら直接遷移
                 if (IS_LOGGED_IN) {
                     window.location.replace(destPath || '/mypage');
                     return;
                 }
 
-                // 未ログイン：LIFFからLINE IDを取得してサーバーで認証
+                // 未ログイン：LIFFセッションがあればLINE IDを取得してサーバー認証
                 if (liff.isLoggedIn()) {
                     return liff.getProfile()
                         .then(function (profile) {

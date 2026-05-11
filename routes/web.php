@@ -26,7 +26,8 @@ use App\Http\Controllers\Admin\DashboardController;
 // liff.init() はエンドポイント URL 上で実行される必要があるため
 Route::get('/', function (\Illuminate\Http\Request $request) {
     // liff.state パラメータがある場合はLIFF経由のディープリンク → liff-redirectを表示
-    if ($request->has('liff.state')) {
+    // ※ PHPはクエリ名の「.」を「_」に変換するため liff_state でチェック
+    if ($request->has('liff_state')) {
         $liffId = \App\Models\Setting::get('liff_id', config('services.line.liff_id', ''));
         return view('liff-redirect', compact('liffId'));
     }
