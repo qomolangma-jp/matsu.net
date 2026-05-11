@@ -24,7 +24,12 @@ use App\Http\Controllers\Admin\DashboardController;
 // トップページ = LIFF エンドポイント URL
 // "/" でそのまま登録フォームを返す（リダイレクトしない）
 // liff.init() はエンドポイント URL 上で実行される必要があるため
-Route::get('/', [RegisterController::class, 'showForm'])->name('home');
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('mypage.index');
+    }
+    return app(\App\Http\Controllers\RegisterController::class)->showForm(request());
+})->name('home');
 
 // 管理者ログイン
 Route::get('/admin', function () {

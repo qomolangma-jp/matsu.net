@@ -46,6 +46,9 @@
     </div>
     <form method="POST" action="{{ route('logout') }}">
         @csrf
+        <a href="{{ route('mypage.index') }}" class="btn btn-sm btn-outline-light w-100 mb-2">
+            <i class="bi bi-person"></i> マイページへ
+        </a>
         <button type="submit" class="btn btn-sm btn-outline-light w-100">
             <i class="bi bi-box-arrow-left"></i> ログアウト
         </button>
