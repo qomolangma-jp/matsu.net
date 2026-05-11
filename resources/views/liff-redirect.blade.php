@@ -23,12 +23,22 @@
         var LIFF_ID      = '{{ $liffId }}';
         var IS_LOGGED_IN = {{ Auth::check() ? 'true' : 'false' }};
 
+        var msgEl = document.getElementById('msg');
+        function log(txt) {
+            msgEl.innerHTML += txt + '<br>';
+        }
+
         // liff.init() 前に liff.state を取得する（init後にURLが書き換わるため）
         var _rawState = new URLSearchParams(window.location.search).get('liff.state');
         var destPath  = (_rawState && /^\/(events|news)\/\d+$/.test(_rawState)) ? _rawState : null;
 
+        log('destPath: ' + destPath);
+        log('IS_LOGGED_IN: ' + IS_LOGGED_IN);
+
         liff.init({ liffId: LIFF_ID })
             .then(function () {
+                log('liff.isLoggedIn: ' + liff.isLoggedIn());
+
                 // ログイン済みなら直接遷移
                 if (IS_LOGGED_IN) {
                     window.location.replace(destPath || '/mypage');
@@ -37,8 +47,10 @@
 
                 // 未ログイン：LIFFセッションがあればLINE IDを取得してサーバー認証
                 if (liff.isLoggedIn()) {
+                    log('getProfile呼び出し中...');
                     return liff.getProfile()
                         .then(function (profile) {
+                            log('LINE ID取得: ' + profile.userId.substring(0, 6) + '...');
                             var lineId   = profile.userId;
                             var redirect = destPath || '/mypage';
                             window.location.replace(
@@ -47,16 +59,13 @@
                             );
                         });
                 } else {
-                    // LIFF未ログイン → LINE OAuthを起動してこのページに戻ってくる
+                    log('LIFF未ログイン → liff.login()起動');
                     liff.login();
                 }
             })
             .catch(function (err) {
                 document.querySelector('.box p').textContent = 'エラーが発生しました';
-                document.getElementById('msg').textContent = err.message;
-                setTimeout(function () {
-                    window.location.replace('/mypage');
-                }, 3000);
+                log('ERROR: ' + err.message);
             });
     </script>
 </body>
