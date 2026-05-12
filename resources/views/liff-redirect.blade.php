@@ -23,6 +23,18 @@
         var LIFF_ID      = '{{ $liffId }}';
         var IS_LOGGED_IN = {{ Auth::check() ? 'true' : 'false' }};
         var SESSION_KEY  = 'liff_dest_path';
+        var APP_ORIGIN   = '{{ request()->getSchemeAndHttpHost() }}';
+        var AUTH_LINE_URL = '{{ url('/auth/line') }}';
+        var MYPAGE_URL    = '{{ url('/mypage') }}';
+        var LOGIN_RETURN_URL = '{{ request()->fullUrl() }}';
+
+        function toAppUrl(path) {
+            if (!path || path.charAt(0) !== '/') {
+                return MYPAGE_URL;
+            }
+
+            return APP_ORIGIN + path;
+        }
 
         // liff.init() 前に liff.state を取得（init後にURLが書き換わるため）
         var _rawState = new URLSearchParams(window.location.search).get('liff.state');
@@ -40,7 +52,7 @@
                 // Laravelログイン済みなら直接遷移
                 if (IS_LOGGED_IN) {
                     sessionStorage.removeItem(SESSION_KEY);
-                    window.location.replace(destPath || '/mypage');
+                    window.location.replace(destPath ? toAppUrl(destPath) : MYPAGE_URL);
                     return;
                 }
 
@@ -52,13 +64,13 @@
                             var lineId   = profile.userId;
                             var redirect = destPath || '/mypage';
                             window.location.replace(
-                                '/auth/line?line_id=' + encodeURIComponent(lineId)
+                                AUTH_LINE_URL + '?line_id=' + encodeURIComponent(lineId)
                                 + '&redirect=' + encodeURIComponent(redirect)
                             );
                         });
                 } else {
                     // LIFF未ログイン → LINE OAuthを起動（戻り後に同ページを再レンダリング）
-                    liff.login();
+                    liff.login({ redirectUri: LOGIN_RETURN_URL });
                 }
             })
             .catch(function (err) {
