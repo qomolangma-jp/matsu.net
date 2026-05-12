@@ -44,6 +44,13 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
     return app(\App\Http\Controllers\RegisterController::class)->showForm($request);
 })->name('home');
 
+Route::get('/liff/bridge/{type}/{id}', function (string $type, int $id) {
+    $liffId = \App\Models\Setting::get('liff_id', config('services.line.liff_id', ''));
+    $destPath = '/' . $type . '/' . $id;
+
+    return view('liff-redirect', compact('liffId', 'destPath'));
+})->where('type', 'events|news')->whereNumber('id')->name('liff.bridge');
+
 // 管理者ログイン
 Route::get('/admin', function () {
     return redirect()->route('admin.login.form');

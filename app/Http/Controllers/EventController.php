@@ -12,7 +12,7 @@ class EventController extends Controller
 {
     private function redirectGuestToLiff(Request $request)
     {
-        return redirect('/?liff.state=' . urlencode($request->getPathInfo()));
+        return redirect('/liff/bridge' . $request->getPathInfo());
     }
 
     /**

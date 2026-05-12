@@ -264,7 +264,7 @@ class LineMessagingService
     {
         $liffId = Setting::get('liff_id', '');
         if (!empty($liffId)) {
-            return 'https://liff.line.me/' . $liffId . '?liff.state=' . urlencode($path);
+            return 'https://liff.line.me/' . $liffId . '/liff/bridge' . $path;
         }
         return url($path);
     }

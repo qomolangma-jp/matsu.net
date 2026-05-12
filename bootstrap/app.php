@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             $path = '/'.$request->path();
 
             if (preg_match('#^/(events|news)(/.*)?$#', $path)) {
-                return '/?liff.state=' . urlencode($path);
+                return '/liff/bridge' . $path;
             }
 
             return route('login');

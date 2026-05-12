@@ -21,12 +21,12 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
         var LIFF_ID      = '{{ $liffId }}';
-        var IS_LOGGED_IN = {{ Auth::check() ? 'true' : 'false' }};
         var SESSION_KEY  = 'liff_dest_path';
         var APP_ORIGIN   = '{{ request()->getSchemeAndHttpHost() }}';
         var AUTH_LINE_URL = '{{ url('/auth/line') }}';
         var MYPAGE_URL    = '{{ url('/mypage') }}';
         var LOGIN_RETURN_URL = '{{ request()->fullUrl() }}';
+        var INITIAL_DEST_PATH = {!! json_encode($destPath ?? null) !!};
 
         function toAppUrl(path) {
             if (!path || path.charAt(0) !== '/') {
@@ -36,27 +36,34 @@
             return APP_ORIGIN + path;
         }
 
-        // liff.init() 前に liff.state を取得（init後にURLが書き換わるため）
+        function normalizeDestPath(value) {
+            if (!value) {
+                return null;
+            }
+
+            var bridgeMatch = value.match(/^\/liff\/bridge\/(events|news)\/(\d+)$/);
+            if (bridgeMatch) {
+                return '/' + bridgeMatch[1] + '/' + bridgeMatch[2];
+            }
+
+            return /^\/(events|news)\/\d+$/.test(value) ? value : null;
+        }
+
+        // liff.init() 前に遷移先を取得する（init後はURLが二次リダイレクト後の形になる）
         var _rawState = new URLSearchParams(window.location.search).get('liff.state');
-        var destPath  = (_rawState && /^\/(events|news)\/\d+$/.test(_rawState))
-                            ? _rawState
-                            : sessionStorage.getItem(SESSION_KEY);  // liff.login()後の復元
+        var destPath  = normalizeDestPath(INITIAL_DEST_PATH)
+                            || normalizeDestPath(_rawState)
+                            || normalizeDestPath(window.location.pathname)
+                            || sessionStorage.getItem(SESSION_KEY);
 
         // destPath が取れた場合はsessionStorageに保存（liff.login()リダイレクトに備える）
         if (destPath) {
             sessionStorage.setItem(SESSION_KEY, destPath);
         }
 
-        liff.init({ liffId: LIFF_ID })
+        liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true })
             .then(function () {
-                // Laravelログイン済みなら直接遷移
-                if (IS_LOGGED_IN) {
-                    sessionStorage.removeItem(SESSION_KEY);
-                    window.location.replace(destPath ? toAppUrl(destPath) : MYPAGE_URL);
-                    return;
-                }
-
-                // 未ログイン：LIFFセッションがあればLINE IDを取得してサーバー認証
+                // LIFFセッションがあれば毎回 /auth/line を通してサーバー側のログイン状態を確定させる
                 if (liff.isLoggedIn()) {
                     return liff.getProfile()
                         .then(function (profile) {
