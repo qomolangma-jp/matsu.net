@@ -98,12 +98,13 @@
                         <label class="form-label required">生年月日</label>
                         @php
                             $currentYear  = (int) date('Y');
-                            $minYear      = $currentYear - 99;
                             $maxYear      = $currentYear - 15;
                             $oldBirth     = old('birth_date', $user->birth_date ? $user->birth_date->format('Y-m-d') : '');
-                            $oldBirthYear  = $oldBirth ? (int) substr($oldBirth, 0, 4) : '';
-                            $oldBirthMonth = $oldBirth ? (int) substr($oldBirth, 5, 2) : '';
-                            $oldBirthDay   = $oldBirth ? (int) substr($oldBirth, 8, 2) : '';
+                            $birthDateValue = $oldBirth ? \Illuminate\Support\Carbon::parse($oldBirth) : null;
+                            $oldBirthYear   = $birthDateValue?->year ?? '';
+                            $oldBirthMonth  = $birthDateValue?->month ?? '';
+                            $oldBirthDay    = $birthDateValue?->day ?? '';
+                            $minYear        = min($currentYear - 99, $oldBirthYear ?: $currentYear - 99);
                         @endphp
                         <input type="hidden" name="birth_date" id="birthDate" value="{{ $oldBirth }}">
                         <div class="d-flex gap-2 align-items-center">
