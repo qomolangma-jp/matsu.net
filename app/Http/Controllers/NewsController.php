@@ -3,20 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\News;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NewsController extends Controller
 {
+    private function redirectGuestToLiff(Request $request)
+    {
+        return redirect('/?liff.state=' . urlencode($request->getPathInfo()));
+    }
+
     /**
      * ニュース一覧（ログインユーザーの卒業年度でフィルタ）
      */
     public function index(Request $request)
     {
-        $user = Auth::user()?->fresh();
+        $user = Auth::user();
+
+        if ($user instanceof User) {
+            $user = $user->fresh();
+        }
 
         if (!$user) {
-            return redirect()->route('admin.login.form');
+            return $this->redirectGuestToLiff($request);
         }
 
         $query = News::published()
@@ -43,12 +53,16 @@ class NewsController extends Controller
     /**
      * ニュース詳細
      */
-    public function show(News $news)
+    public function show(Request $request, News $news)
     {
-        $user = Auth::user()?->fresh();
+        $user = Auth::user();
+
+        if ($user instanceof User) {
+            $user = $user->fresh();
+        }
 
         if (!$user) {
-            return redirect()->route('admin.login.form');
+            return $this->redirectGuestToLiff($request);
         }
 
         // 未公開は404

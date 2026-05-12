@@ -4,20 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
+    private function redirectGuestToLiff(Request $request)
+    {
+        return redirect('/?liff.state=' . urlencode($request->getPathInfo()));
+    }
+
     /**
      * イベント一覧（ログインユーザーの卒業年度でフィルタ）
      */
     public function index(Request $request)
     {
-        $user = Auth::user()?->fresh();
+        $user = Auth::user();
+
+        if ($user instanceof User) {
+            $user = $user->fresh();
+        }
 
         if (!$user) {
-            return redirect()->route('admin.login.form');
+            return $this->redirectGuestToLiff($request);
         }
 
         $query = Event::published()
@@ -48,12 +58,16 @@ class EventController extends Controller
     /**
      * イベント詳細
      */
-    public function show(Event $event)
+    public function show(Request $request, Event $event)
     {
-        $user = Auth::user()?->fresh();
+        $user = Auth::user();
+
+        if ($user instanceof User) {
+            $user = $user->fresh();
+        }
 
         if (!$user) {
-            return redirect()->route('admin.login.form');
+            return $this->redirectGuestToLiff($request);
         }
 
         // 未公開は404
@@ -78,10 +92,14 @@ class EventController extends Controller
      */
     public function respond(Request $request, Event $event)
     {
-        $user = Auth::user()?->fresh();
+        $user = Auth::user();
+
+        if ($user instanceof User) {
+            $user = $user->fresh();
+        }
 
         if (!$user) {
-            return redirect()->route('admin.login.form');
+            return $this->redirectGuestToLiff($request);
         }
 
         if (!$event->is_published) {
