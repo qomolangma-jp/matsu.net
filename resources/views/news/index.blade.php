@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'お知らせ一覧 - 松.net')
+@section('title', 'お知らせ一覧 - 松高.net')
 
 @section('content')
 <div class="row">

@@ -33,7 +33,7 @@ class ApprovalRequestMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '【' . Setting::get('site_name', '松.net') . '】新規登録承認依頼',
+            subject: '【' . Setting::get('site_name', '松高.net') . '】新規登録承認依頼',
         );
     }
 

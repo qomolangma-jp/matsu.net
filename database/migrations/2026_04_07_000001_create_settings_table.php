@@ -24,7 +24,7 @@ return new class extends Migration
             // 基本情報
             [
                 'key'         => 'site_name',
-                'value'       => '松.net',
+                'value'       => '松高.net',
                 'type'        => 'string',
                 'label'       => 'サイト名',
                 'description' => 'ページタイトルやメール件名に使用されます',

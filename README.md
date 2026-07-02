@@ -1,4 +1,4 @@
-# 松.net - 同窓生向けWebシステム
+# 松高.net - 同窓生向けWebシステム
 
 LINE LIFFを活用した同窓生向けWebシステムです。
 
@@ -63,7 +63,7 @@ docker exec -it pg-1geki-app chown -R www-data:www-data /var/www/html/storage /v
 `c:\Users\bybyb\myPrg\matsu.net\.env` ファイルを開き、以下の項目を設定：
 
 ```env
-APP_NAME="松.net"
+APP_NAME="松高.net"
 APP_URL=http://matsu.localhost
 
 # LINE LIFF設定（LINE Developersで取得）
@@ -228,8 +228,8 @@ MIT License
 
 ## 作成者
 
-松.netプロジェクトチーム
+松高.netプロジェクトチーム
 
 ---
 
-**🌲 松.net で同窓生とつながろう！**
+**🌲 松高.net で同窓生とつながろう！**

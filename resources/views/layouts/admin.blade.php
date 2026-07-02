@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', '管理画面 - 松.net')</title>
+    <title>@yield('title', '管理画面 - 松高.net')</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -171,7 +171,7 @@
     <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="adminOffcanvas" aria-labelledby="adminOffcanvasLabel" style="width: 260px; background-color: var(--primary-color); color: white;">
         <div class="offcanvas-header" style="border-bottom: 1px solid rgba(255,255,255,0.15);">
             <div>
-                <h6 class="mb-0 text-white">松.net @if(app()->environment('local'))<span class="badge bg-danger" style="font-size:0.45em;">LOCAL</span>@endif</h6>
+                <h6 class="mb-0 text-white">松高.net @if(app()->environment('local'))<span class="badge bg-danger" style="font-size:0.45em;">LOCAL</span>@endif</h6>
                 <small class="text-white-50">管理画面</small>
             </div>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>

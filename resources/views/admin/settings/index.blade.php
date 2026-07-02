@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', '設定 - 松.net 管理画面')
+@section('title', '設定 - 松高.net 管理画面')
 @section('page-title', 'システム設定')
 
 @section('content')

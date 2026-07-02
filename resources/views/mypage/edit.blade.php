@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'プロフィール編集 - 松.net')
+@section('title', 'プロフィール編集 - 松高.net')
 
 @section('content')
 <div class="row">

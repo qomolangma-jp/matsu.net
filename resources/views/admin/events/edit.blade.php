@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'イベント編集 - 松.net')
+@section('title', 'イベント編集 - 松高.net')
 @section('page-title', 'イベント編集')
 
 @section('content')

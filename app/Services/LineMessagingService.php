@@ -275,7 +275,7 @@ class LineMessagingService
     private function buildNewsMessage(News $news): array
     {
         $url  = $this->buildUrl('/news/' . $news->id);
-        $text = "【松.net お知らせ】\n\n";
+        $text = "【松高.net お知らせ】\n\n";
         $text .= "{$news->title}\n\n";
         $text .= $news->body;
         $text .= "\n\n詳細はこちら▶︎ {$url}";
@@ -294,7 +294,7 @@ class LineMessagingService
     private function buildEventMessage(Event $event): array
     {
         $url  = $this->buildUrl('/events/' . $event->id);
-        $text = "【松.net イベントのお知らせ】\n\n";
+        $text = "【松高.net イベントのお知らせ】\n\n";
         $text .= "📅 {$event->title}\n\n";
 
         if ($event->event_date) {

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'カテゴリー新規作成 - 松.net')
+@section('title', 'カテゴリー新規作成 - 松高.net')
 @section('page-title', 'カテゴリー新規作成')
 
 @section('content')

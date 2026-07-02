@@ -1,5 +1,5 @@
 <div class="logo d-none d-lg-block">
-    <h4 class="mb-1">松.net @if(app()->environment('local'))<span class="badge bg-danger" style="font-size:0.45em; vertical-align:middle;">LOCAL</span>@endif</h4>
+    <h4 class="mb-1">松高.net @if(app()->environment('local'))<span class="badge bg-danger" style="font-size:0.45em; vertical-align:middle;">LOCAL</span>@endif</h4>
     <small>管理画面</small>
 </div>
 

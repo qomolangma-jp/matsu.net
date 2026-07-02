@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'ダッシュボード - 松.net')
+@section('title', 'ダッシュボード - 松高.net')
 @section('page-title', 'ダッシュボード')
 
 @section('top-actions')

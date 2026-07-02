@@ -1,7 +1,7 @@
 {
     "name": "matsu-net/web-system",
     "type": "project",
-    "description": "同窓生向けWebシステム - 松.net",
+    "description": "同窓生向けWebシステム - 松高.net",
     "keywords": ["laravel", "liff", "alumni"],
     "license": "MIT",
     "require": {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', '松.net - 同窓生向けWebシステム')</title>
+    <title>@yield('title', '松高.net - 同窓生向けWebシステム')</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -95,7 +95,7 @@
     <nav class="navbar navbar-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <h4 class="mb-0">松.net @if(app()->environment('local'))<small class="badge bg-danger ms-2" style="font-size:0.5em; vertical-align:middle;">LOCAL</small>@endif</h4>
+                <h4 class="mb-0">松高.net @if(app()->environment('local'))<small class="badge bg-danger ms-2" style="font-size:0.5em; vertical-align:middle;">LOCAL</small>@endif</h4>
             </a>
             @auth
             <button class="navbar-toggler d-md-none border-0"

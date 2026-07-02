@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '登録完了 - 松.net')
+@section('title', '登録完了 - 松高.net')
 
 @section('content')
 <div class="row justify-content-center">
@@ -49,7 +49,7 @@
                     </div>
                     <h3 class="mb-3">登録が完了しました！</h3>
                     <p class="text-muted">
-                        松.netへのご登録ありがとうございます。<br>
+                        松高.netへのご登録ありがとうございます。<br>
                         同窓生の皆様とのつながりをお楽しみください。
                     </p>
                     

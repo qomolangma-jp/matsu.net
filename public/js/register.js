@@ -1,5 +1,5 @@
 /**
- * 松.net - 新規登録フォーム JavaScript
+ * 松高.net - 新規登録フォーム JavaScript
  */
 
 // ========== 画面ログ（LIFF内では console が見えないため） ==========

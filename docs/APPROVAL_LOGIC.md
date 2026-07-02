@@ -101,7 +101,7 @@ docker exec matsu-app php artisan migrate
 ```env
 MAIL_MAILER=log
 MAIL_FROM_ADDRESS="noreply@matsu.localhost"
-MAIL_FROM_NAME="松.net"
+MAIL_FROM_NAME="松高.net"
 ```
 
 メールは `storage/logs/laravel.log` に出力されます。
@@ -116,7 +116,7 @@ MAIL_USERNAME=your-email@gmail.com
 MAIL_PASSWORD=your-app-password
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS="noreply@matsu.net"
-MAIL_FROM_NAME="松.net"
+MAIL_FROM_NAME="松高.net"
 ```
 
 ## テストデータ作成例

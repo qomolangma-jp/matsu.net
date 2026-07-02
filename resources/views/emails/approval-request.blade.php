@@ -77,7 +77,7 @@
 </head>
 <body>
     <div class="header">
-        <h2>松.net 新規登録承認依頼</h2>
+        <h2>松高.net 新規登録承認依頼</h2>
     </div>
     
     <div class="content">
@@ -91,7 +91,7 @@
             @endif
         </p>
         
-        <p>松.netに新規登録申請がありました。以下の内容をご確認の上、承認・却下のご判断をお願いいたします。</p>
+        <p>松高.netに新規登録申請がありました。以下の内容をご確認の上、承認・却下のご判断をお願いいたします。</p>
         
         @if($matchType === 'exact')
             <div class="match-status" style="background-color: #d4edda; border-left: 4px solid #28a745;">
@@ -208,7 +208,7 @@
     
     <div class="footer">
         <p>
-            松.net 同窓生向けWebシステム<br>
+            松高.net 同窓生向けWebシステム<br>
             {{ config('app.url') }}
         </p>
     </div>

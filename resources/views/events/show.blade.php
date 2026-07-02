@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $event->title . ' - 松.net')
+@section('title', $event->title . ' - 松高.net')
 
 @section('content')
 <div class="row">

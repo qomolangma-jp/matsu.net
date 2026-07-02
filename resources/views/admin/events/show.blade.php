@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', '出欠状況 - ' . $event->title . ' - 松.net')
+@section('title', '出欠状況 - ' . $event->title . ' - 松高.net')
 @section('page-title', '出欠状況')
 
 @section('top-actions')

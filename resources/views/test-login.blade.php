@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>テストログイン - 松.net</title>
+    <title>テストログイン - 松高.net</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -23,7 +23,7 @@
         <div class="login-card">
             <div class="card shadow-lg">
                 <div class="card-body p-5">
-                    <h3 class="text-center mb-4">松.net 管理画面</h3>
+                    <h3 class="text-center mb-4">松高.net 管理画面</h3>
                     <p class="text-center text-muted mb-4">テストユーザーでログイン</p>
                     
                     @if(session('error'))
