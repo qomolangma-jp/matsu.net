@@ -23,7 +23,9 @@
         <div class="login-card">
             <div class="card shadow-lg">
                 <div class="card-body p-5">
-                    <h3 class="text-center mb-4">松高.net 管理画面</h3>
+                    <div class="text-center mb-4">
+                        <img src="{{ asset('images/matsu_logo.png') }}" alt="松高.net" style="height: 40px; width: auto;">
+                    </div>
                     <p class="text-center text-muted mb-4">テストユーザーでログイン</p>
                     
                     @if(session('error'))

@@ -1,5 +1,10 @@
 <div class="logo d-none d-lg-block">
-    <h4 class="mb-1">松高.net @if(app()->environment('local'))<span class="badge bg-danger" style="font-size:0.45em; vertical-align:middle;">LOCAL</span>@endif</h4>
+    <div class="d-flex align-items-center gap-2 mb-1">
+        <img src="{{ asset('images/matsu_logo.png') }}" alt="松高.net" style="height: 34px; width: auto;">
+        @if(app()->environment('local'))
+            <span class="badge bg-danger" style="font-size:0.45em; vertical-align:middle;">LOCAL</span>
+        @endif
+    </div>
     <small>管理画面</small>
 </div>
 

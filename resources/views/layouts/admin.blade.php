@@ -171,7 +171,10 @@
     <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="adminOffcanvas" aria-labelledby="adminOffcanvasLabel" style="width: 260px; background-color: var(--primary-color); color: white;">
         <div class="offcanvas-header" style="border-bottom: 1px solid rgba(255,255,255,0.15);">
             <div>
-                <h6 class="mb-0 text-white">松高.net @if(app()->environment('local'))<span class="badge bg-danger" style="font-size:0.45em;">LOCAL</span>@endif</h6>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="{{ asset('images/matsu_logo.png') }}" alt="松高.net" style="height: 28px; width: auto;">
+                    @if(app()->environment('local'))<span class="badge bg-danger" style="font-size:0.45em;">LOCAL</span>@endif
+                </div>
                 <small class="text-white-50">管理画面</small>
             </div>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>

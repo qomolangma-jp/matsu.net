@@ -16,7 +16,9 @@
             <h4 class="mb-0 text-white fw-bold">
                 <i class="bi bi-shield-lock me-2"></i>管理者ログイン
             </h4>
-            <small class="text-white-50">松高.net 管理システム</small>
+            <div class="mt-2">
+                <img src="{{ asset('images/matsu_logo.png') }}" alt="松高.net" style="height: 30px; width: auto;">
+            </div>
         </div>
         <div class="card-body p-4">
 

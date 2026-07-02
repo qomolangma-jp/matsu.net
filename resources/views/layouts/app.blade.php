@@ -94,8 +94,9 @@
     <!-- ナビゲーションバー -->
     <nav class="navbar navbar-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="/">
-                <h4 class="mb-0">松高.net @if(app()->environment('local'))<small class="badge bg-danger ms-2" style="font-size:0.5em; vertical-align:middle;">LOCAL</small>@endif</h4>
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <img src="{{ asset('images/matsu_logo.png') }}" alt="松高.net" style="height: 34px; width: auto;">
+                @if(app()->environment('local'))<small class="badge bg-danger" style="font-size:0.5em; vertical-align:middle;">LOCAL</small>@endif
             </a>
             @auth
             <button class="navbar-toggler d-md-none border-0"
