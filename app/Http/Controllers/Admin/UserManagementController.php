@@ -194,10 +194,7 @@ class UserManagementController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
-        // 学年管理者の場合、自学年のみ編集可能
-        if ($admin->role === 'year_admin' && $admin->graduation_year !== $user->graduation_year) {
-            abort(403, '他学年のユーザーは編集できません。');
-        }
+        $this->ensureOperableByAdmin($admin, $user, '編集');
 
         // カテゴリーリスト
         $categories = $this->getCategoriesList($admin);
@@ -228,10 +225,7 @@ class UserManagementController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
-        // 学年管理者の場合、自学年のみ更新可能
-        if ($admin->role === 'year_admin' && $admin->graduation_year !== $user->graduation_year) {
-            abort(403, '他学年のユーザーは更新できません。');
-        }
+        $this->ensureOperableByAdmin($admin, $user, '更新');
 
         // 卒業年度はマスター管理者のみ変更可能
         if ($admin->role !== 'master_admin') {
@@ -334,10 +328,7 @@ class UserManagementController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
-        // 学年管理者の場合、自学年のみ承認可能
-        if ($admin->role === 'year_admin' && $admin->graduation_year !== $user->graduation_year) {
-            abort(403, '他学年のユーザーは承認できません。');
-        }
+        $this->ensureOperableByAdmin($admin, $user, '承認');
 
         DB::beginTransaction();
         try {
@@ -394,10 +385,7 @@ class UserManagementController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
-        // 学年管理者の場合、自学年のみ却下可能
-        if ($admin->role === 'year_admin' && $admin->graduation_year !== $user->graduation_year) {
-            abort(403, '他学年のユーザーは却下できません。');
-        }
+        $this->ensureOperableByAdmin($admin, $user, '却下');
 
         DB::beginTransaction();
         try {
@@ -444,10 +432,7 @@ class UserManagementController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
-        // 学年管理者の場合、自学年のみ削除可能
-        if ($admin->role === 'year_admin' && $admin->graduation_year !== $user->graduation_year) {
-            abort(403, '他学年のユーザーは削除できません。');
-        }
+        $this->ensureOperableByAdmin($admin, $user, '削除');
 
         // 自分自身は削除不可
         if ($admin->id === $user->id) {
@@ -525,6 +510,12 @@ class UserManagementController extends Controller
             ->filterByPermission($admin)
             ->whereIn('id', $validated['selected_user_ids'])
             ->get();
+
+        if ($admin->role === 'year_admin' && $targetUsers->contains(fn ($u) => $u->role === 'master_admin')) {
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', '学年管理者はマスター管理者を一括操作できません。');
+        }
 
         if ($targetUsers->isEmpty()) {
             return redirect()
@@ -709,5 +700,23 @@ class UserManagementController extends Controller
             'approved' => '承認済み',
             'rejected' => '却下',
         ][$status] ?? $status;
+    }
+
+    /**
+     * 学年管理者による対象ユーザー操作可否チェック
+     */
+    private function ensureOperableByAdmin(User $admin, User $targetUser, string $action): void
+    {
+        if ($admin->role !== 'year_admin') {
+            return;
+        }
+
+        if ($admin->graduation_year !== $targetUser->graduation_year) {
+            abort(403, "他学年のユーザーは{$action}できません。");
+        }
+
+        if ($targetUser->role === 'master_admin') {
+            abort(403, "学年管理者はマスター管理者を{$action}できません。");
+        }
     }
 }

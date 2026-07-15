@@ -144,9 +144,17 @@
                 </thead>
                 <tbody>
                     @forelse($users as $user)
+                        @php
+                            $isMasterLockedForYearAdmin = Auth::user()->role === 'year_admin' && $user->role === 'master_admin';
+                        @endphp
                         <tr>
                             <td class="text-center align-middle">
-                                <input type="checkbox" class="form-check-input row-user-checkbox" name="selected_user_ids[]" value="{{ $user->id }}" form="bulkActionForm">
+                                <input type="checkbox"
+                                       class="form-check-input row-user-checkbox"
+                                       name="selected_user_ids[]"
+                                       value="{{ $user->id }}"
+                                       form="bulkActionForm"
+                                       @if($isMasterLockedForYearAdmin) disabled @endif>
                             </td>
                             <td class="align-middle">{{ $user->id }}</td>
                             <td style="white-space:nowrap;" class="align-middle">
@@ -184,13 +192,18 @@
                             </td>
                             <td class="align-middle">
                                 <select class="form-select form-select-sm"
-                                        onchange="handleRowAction(this, {{ $user->id }}, @js($user->full_name))">
-                                    <option value="">操作を選択</option>
-                                    <option value="edit">編集</option>
-                                    @if($user->approval_status !== 'approved')
-                                        <option value="approve">承認</option>
+                                        onchange="handleRowAction(this, {{ $user->id }}, @js($user->full_name))"
+                                        @if($isMasterLockedForYearAdmin) disabled @endif>
+                                    @if($isMasterLockedForYearAdmin)
+                                        <option value="">操作不可</option>
+                                    @else
+                                        <option value="">操作を選択</option>
+                                        <option value="edit">編集</option>
+                                        @if($user->approval_status !== 'approved')
+                                            <option value="approve">承認</option>
+                                        @endif
+                                        <option value="delete">削除</option>
                                     @endif
-                                    <option value="delete">削除</option>
                                 </select>
                             </td>
                         </tr>
@@ -242,7 +255,7 @@ const selectAllUsers = document.getElementById('selectAllUsers');
 
 if (selectAllUsers) {
     selectAllUsers.addEventListener('change', function () {
-        document.querySelectorAll('.row-user-checkbox').forEach((checkbox) => {
+        document.querySelectorAll('.row-user-checkbox:not(:disabled)').forEach((checkbox) => {
             checkbox.checked = selectAllUsers.checked;
         });
     });
@@ -250,8 +263,8 @@ if (selectAllUsers) {
 
 document.querySelectorAll('.row-user-checkbox').forEach((checkbox) => {
     checkbox.addEventListener('change', function () {
-        const rowCheckboxes = document.querySelectorAll('.row-user-checkbox');
-        const checkedCount = document.querySelectorAll('.row-user-checkbox:checked').length;
+        const rowCheckboxes = document.querySelectorAll('.row-user-checkbox:not(:disabled)');
+        const checkedCount = document.querySelectorAll('.row-user-checkbox:not(:disabled):checked').length;
         if (selectAllUsers) {
             selectAllUsers.checked = rowCheckboxes.length > 0 && checkedCount === rowCheckboxes.length;
             selectAllUsers.indeterminate = checkedCount > 0 && checkedCount < rowCheckboxes.length;
@@ -261,7 +274,7 @@ document.querySelectorAll('.row-user-checkbox').forEach((checkbox) => {
 
 if (bulkActionForm) {
     bulkActionForm.addEventListener('submit', function (event) {
-        const selectedUsers = document.querySelectorAll('.row-user-checkbox:checked');
+        const selectedUsers = document.querySelectorAll('.row-user-checkbox:not(:disabled):checked');
 
         if (!bulkActionSelect.value) {
             event.preventDefault();
