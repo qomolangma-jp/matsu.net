@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>松高.net かんたんマニュアル</title>
+	<meta name="description" content="松高.net の使い方を、わかりやすくまとめたマニュアルです。">
+	
+	<!-- Google Fonts: 高級感あふれる和モダン明朝体と洗練されたモダンゴシック -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,600;1,400&family=Noto+Serif+JP:wght@500;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+	<style>
+		:root {
+			/* 新しいロゴバナーから1px単位で抽出した完全調和カラーパレット */
+			--pine-green: #1e4b27;      /* メイン：格調高く深い松葉のグリーン */
+			--pine-green-dark: #123018; /* 背景用の極深グリーン */
+			--pine-green-soft: #f2f7f3; /* 軽やかな極薄グリーン */
+			--orange-gold: #d47b1e;     /* アクセント：輝きのあるオレンジゴールド */
+			--orange-gold-soft: #fdf6ed;/* 背景用の極薄オレンジゴールド */
+			
+			--text-black: #1a221b;      /* 可読性を極限まで高めた黒緑 */
+			--text-muted: #58635a;      /* ニュアンスのあるグレーグリーン */
+			--bg-warm: #faf9f6;         /* ぬくもりのある白磁（オフホワイト） */
+			--card-white: #ffffff;
+			--border-color: #e2e9e3;
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		html {
+			scroll-behavior: smooth;
+		}
+
+		body {
+			font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+			background-color: var(--bg-warm);
+			color: var(--text-black);
+			line-height: 1.9;
+			letter-spacing: 0.03em;
+			font-size: 16px;
+			-webkit-font-smoothing: antialiased;
+		}
+
+		/* ==========================================
+		   GLOBAL DECORATION (幾何学ポリゴンデザイン)
+		   ========================================== */
+		/* ロゴの角にある幾何学ネットワーク（ポリゴン）をCSSで表現 */
+		.polygon-bg {
+			position: absolute;
+			width: 150px;
+			height: 150px;
+			opacity: 0.08;
+			pointer-events: none;
+			z-index: 0;
+		}
+		.polygon-bg-left {
+			top: 20px;
+			left: 20px;
+			border-left: 2px solid var(--pine-green);
+			border-top: 2px solid var(--pine-green);
+			background-image: linear-gradient(45deg, transparent 50%, var(--pine-green) 50%);
+			background-size: 10px 10px;
+			clip-path: polygon(0 0, 100% 0, 0 100%);
+		}
+		.polygon-bg-right {
+			bottom: 20px;
+			right: 20px;
+			border-right: 2px solid var(--orange-gold);
+			border-bottom: 2px solid var(--orange-gold);
+			background-image: linear-gradient(45deg, var(--orange-gold) 50%, transparent 50%);
+			background-size: 10px 10px;
+			clip-path: polygon(100% 100%, 100% 0, 0 100%);
+		}
+
+		/* ==========================================
+		   HEADER & HERO SECTION (最高峰の掴み)
+		   ========================================== */
+		.hero-container {
+			background: var(--card-white);
+			border-bottom: 1px solid var(--border-color);
+			position: relative;
+			overflow: hidden;
+			padding: 60px 20px 80px;
+			text-align: center;
+		}
+
+		/* バナー上部のオレンジゴールド極細ライン */
+		.hero-container::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 6px;
+			background-color: var(--orange-gold);
+		}
+
+		.logo-outer {
+			display: inline-block;
+			background: var(--card-white);
+			border: 1px solid var(--border-color);
+			border-radius: 16px;
+			padding: 16px;
+			box-shadow: 0 15px 40px rgba(30, 75, 39, 0.06);
+			margin-bottom: 40px;
+			position: relative;
+			z-index: 2;
+		}
+
+		.logo-img {
+			display: block;
+			max-width: 100%;
+			width: 520px;
+			height: auto;
+			border-radius: 4px;
+		}
+
+		.hero-content {
+			max-width: 720px;
+			margin: 0 auto;
+			position: relative;
+			z-index: 2;
+		}
+
+		.hero-tag {
+			font-family: 'Montserrat', sans-serif;
+			font-size: 0.9rem;
+			font-weight: 600;
+			color: var(--orange-gold);
+			letter-spacing: 0.35em;
+			text-transform: uppercase;
+			margin-bottom: 12px;
+			display: block;
+		}
+
+		.hero-title {
+			font-family: 'Noto Serif JP', serif;
+			font-weight: 900;
+			font-size: 2.6rem;
+			color: var(--pine-green);
+			line-height: 1.35;
+			margin-bottom: 24px;
+		}
+
+		.hero-desc {
+			font-size: 1.15rem;
+			color: var(--text-muted);
+			font-weight: 400;
+			line-height: 1.8;
+		}
+
+		/* ==========================================
+		   NAVIGATION (追従する美しい目次)
+		   ========================================== */
+		.sticky-nav {
+			position: sticky;
+			top: 0;
+			z-index: 100;
+			background: rgba(255, 255, 255, 0.92);
+			backdrop-filter: blur(10px);
+			border-bottom: 1px solid var(--border-color);
+			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+		}
+
+		.nav-inner {
+			max-width: 1000px;
+			margin: 0 auto;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 12px 16px;
+			gap: 8px;
+		}
+
+		.nav-btn {
+			color: var(--text-muted);
+			text-decoration: none;
+			font-size: 0.85rem;
+			font-weight: 700;
+			padding: 8px 18px;
+			border-radius: 30px;
+			transition: all 0.3s ease;
+			letter-spacing: 0.05em;
+		}
+
+		.nav-btn:hover {
+			color: var(--pine-green);
+			background-color: var(--pine-green-soft);
+		}
+
+		/* ==========================================
+		   STRUCTURE & WRAPPERS
+		   ========================================== */
+		.main-content {
+			max-width: 1000px;
+			margin: 0 auto;
+			padding: 80px 20px 120px;
+		}
+
+		.section-outer {
+			margin-bottom: 100px;
+		}
+
+		/* セクションタイトル (LPのエレガントな表現) */
+		.sec-title-wrap {
+			text-align: center;
+			margin-bottom: 50px;
+		}
+
+		.sec-title-en {
+			font-family: 'Montserrat', sans-serif;
+			font-size: 1.1rem;
+			font-weight: 300;
+			color: var(--orange-gold);
+			display: block;
+			letter-spacing: 0.2em;
+			margin-bottom: 8px;
+		}
+
+		.sec-title-jp {
+			font-family: 'Noto Serif JP', serif;
+			font-weight: 700;
+			font-size: 2rem;
+			color: var(--pine-green);
+			position: relative;
+			display: inline-block;
+			padding-bottom: 16px;
+		}
+
+		.sec-title-jp::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 40px;
+			height: 3px;
+			background-color: var(--orange-gold);
+			border-radius: 2px;
+		}
+
+		/* ==========================================
+		   SECTION 1: ABOUT (強烈なメリハリ・ディープグリーン背景)
+		   ========================================== */
+		.about-card {
+			background-color: var(--pine-green-dark);
+			color: #ffffff;
+			border-radius: 32px;
+			overflow: hidden;
+			box-shadow: 0 30px 70px rgba(18, 48, 24, 0.25);
+			position: relative;
+		}
+
+		.about-grid {
+			display: grid;
+			grid-template-columns: 1.1fr 0.9fr;
+		}
+
+		.about-body {
+			padding: 60px;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+		}
+
+		.about-lead {
+			font-size: 1.25rem;
+			font-weight: 500;
+			line-height: 1.8;
+			margin-bottom: 32px;
+			border-left: 4px solid var(--orange-gold);
+			padding-left: 20px;
+		}
+
+		.about-sub {
+			font-family: 'Noto Serif JP', serif;
+			font-size: 1.4rem;
+			color: var(--orange-gold);
+			margin-bottom: 20px;
+			font-weight: 600;
+		}
+
+		.about-list {
+			list-style: none;
+			margin-bottom: 32px;
+		}
+
+		.about-list li {
+			position: relative;
+			padding-left: 28px;
+			margin-bottom: 14px;
+			font-size: 1rem;
+			color: #e2e9e3;
+		}
+
+		.about-list li::before {
+			content: '✓';
+			position: absolute;
+			left: 0;
+			color: var(--orange-gold);
+			font-weight: bold;
+			font-size: 1.1rem;
+		}
+
+		.about-image {
+			background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80');
+			background-size: cover;
+			background-position: center;
+			min-height: 400px;
+			position: relative;
+		}
+
+		/* 写真に豊かな階調を与えるグラデーション */
+		.about-image::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(to right, var(--pine-green-dark) 0%, transparent 100%);
+		}
+
+		.about-note {
+			background-color: rgba(255, 255, 255, 0.06);
+			border: 1px dashed rgba(212, 123, 30, 0.4);
+			border-radius: 16px;
+			padding: 20px 24px;
+			color: #ffffff;
+			font-size: 0.95rem;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.about-note strong {
+			color: var(--orange-gold);
+		}
+
+		/* ==========================================
+		   SECTION 2: REGISTER (美しく明快な手順)
+		   ========================================== */
+		.white-card {
+			background: var(--card-white);
+			border: 1px solid var(--border-color);
+			border-radius: 32px;
+			padding: 60px;
+			box-shadow: 0 20px 50px rgba(0, 0, 0, 0.02);
+		}
+
+		.register-flow {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 16px;
+			margin-bottom: 60px;
+			position: relative;
+		}
+
+		.flow-card {
+			background-color: var(--bg-warm);
+			border: 1px solid var(--border-color);
+			border-radius: 20px;
+			padding: 32px 20px;
+			text-align: center;
+			position: relative;
+			transition: all 0.3s ease;
+		}
+
+		.flow-card:hover {
+			transform: translateY(-5px);
+			border-color: var(--orange-gold);
+			background-color: var(--card-white);
+			box-shadow: 0 15px 35px rgba(212, 123, 30, 0.08);
+		}
+
+		.flow-num {
+			font-family: 'Montserrat', sans-serif;
+			font-size: 2.4rem;
+			font-weight: 800;
+			color: var(--orange-gold);
+			display: block;
+			margin-bottom: 12px;
+			line-height: 1;
+		}
+
+		.flow-title {
+			font-size: 0.95rem;
+			font-weight: 700;
+			color: var(--text-black);
+			line-height: 1.6;
+		}
+
+		/* エディトリアル2カラムレイアウト */
+		.editorial-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 48px;
+			align-items: center;
+			margin-top: 50px;
+		}
+
+		.editorial-image-wrap {
+			border-radius: 24px;
+			overflow: hidden;
+			box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+			position: relative;
+		}
+
+		.editorial-image {
+			width: 100%;
+			height: auto;
+			display: block;
+			transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.editorial-image-wrap:hover .editorial-image {
+			transform: scale(1.04);
+		}
+
+		.editorial-text h3 {
+			font-family: 'Noto Serif JP', serif;
+			font-size: 1.4rem;
+			color: var(--pine-green);
+			margin-bottom: 20px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.editorial-text h3::before {
+			content: '✦';
+			color: var(--orange-gold);
+			font-size: 1rem;
+		}
+
+		.styled-ul {
+			list-style: none;
+		}
+
+		.styled-ul li {
+			position: relative;
+			padding-left: 24px;
+			margin-bottom: 16px;
+			color: var(--text-muted);
+			font-size: 0.95rem;
+		}
+
+		.styled-ul li::before {
+			content: '■';
+			position: absolute;
+			left: 0;
+			top: 1px;
+			color: var(--orange-gold);
+			font-size: 0.75rem;
+		}
+
+		.styled-ul strong {
+			color: var(--text-black);
+		}
+
+		/* ==========================================
+		   SECTION 3: ADMIN (鮮やかな左右対比カード)
+		   ========================================== */
+		.admin-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 32px;
+		}
+
+		.admin-card {
+			border-radius: 28px;
+			padding: 48px;
+			box-shadow: 0 15px 35px rgba(0,0,0,0.02);
+			transition: transform 0.3s ease;
+		}
+
+		.admin-card:hover {
+			transform: translateY(-4px);
+		}
+
+		.admin-card.allow {
+			background-color: var(--pine-green-soft);
+			border: 1px solid rgba(30, 75, 39, 0.15);
+		}
+
+		.admin-card.deny {
+			background-color: var(--orange-gold-soft);
+			border: 1px solid rgba(212, 123, 30, 0.15);
+		}
+
+		.admin-card-header {
+			display: flex;
+			align-items: center;
+			gap: 16px;
+			margin-bottom: 28px;
+		}
+
+		.admin-icon-box {
+			width: 48px;
+			height: 48px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.2rem;
+			font-weight: 900;
+			color: #ffffff;
+		}
+
+		.admin-card.allow .admin-icon-box {
+			background-color: var(--pine-green);
+		}
+
+		.admin-card.deny .admin-icon-box {
+			background-color: var(--orange-gold);
+		}
+
+		.admin-card-title {
+			font-family: 'Noto Serif JP', serif;
+			font-size: 1.35rem;
+			font-weight: 700;
+		}
+
+		.admin-card.allow .admin-card-title { color: var(--pine-green); }
+		.admin-card.deny .admin-card-title { color: var(--orange-gold); }
+
+		/* ==========================================
+		   SECTION 4: FAQ (極上のアコーディオン調カード)
+		   ========================================== */
+		.faq-container {
+			display: flex;
+			flex-direction: column;
+			gap: 18px;
+		}
+
+		.faq-panel {
+			background: var(--card-white);
+			border: 1px solid var(--border-color);
+			border-radius: 20px;
+			padding: 32px 40px;
+			transition: all 0.3s ease;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.faq-panel::before {
+			content: '';
+			position: absolute;
+			left: 0;
+			top: 0;
+			bottom: 0;
+			width: 5px;
+			background-color: var(--pine-green);
+			opacity: 0;
+			transition: opacity 0.3s ease;
+		}
+
+		.faq-panel:hover {
+			border-color: var(--pine-green);
+			box-shadow: 0 10px 30px rgba(30, 75, 39, 0.05);
+		}
+
+		.faq-panel:hover::before {
+			opacity: 1;
+		}
+
+		.faq-q-text {
+			font-family: 'Noto Serif JP', serif;
+			font-weight: 700;
+			font-size: 1.1rem;
+			color: var(--pine-green);
+			margin-bottom: 12px;
+			display: flex;
+			gap: 16px;
+			align-items: flex-start;
+		}
+
+		.faq-badge-q {
+			font-family: 'Montserrat', sans-serif;
+			font-size: 1.4rem;
+			color: var(--orange-gold);
+			font-weight: 800;
+			line-height: 1;
+		}
+
+		.faq-a-text {
+			font-size: 0.95rem;
+			color: var(--text-muted);
+			padding-left: 32px;
+			line-height: 1.85;
+		}
+
+		/* ==========================================
+		   SECTION 5: TERMS & CTA (強烈な登録促進パーツ)
+		   ========================================== */
+		.cta-banner {
+			background: linear-gradient(135deg, var(--pine-green-dark) 0%, var(--pine-green) 100%);
+			color: #ffffff;
+			border-radius: 32px;
+			padding: 80px 40px;
+			text-align: center;
+			position: relative;
+			overflow: hidden;
+			box-shadow: 0 30px 60px rgba(30, 75, 39, 0.2);
+		}
+
+		/* 背景に幾何学パターンの装飾 */
+		.cta-banner::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+			background-size: 24px 24px;
+			pointer-events: none;
+		}
+
+		.cta-title {
+			font-family: 'Noto Serif JP', serif;
+			font-weight: 700;
+			font-size: 2rem;
+			margin-bottom: 16px;
+			position: relative;
+			z-index: 1;
+		}
+
+		.cta-desc {
+			font-size: 1rem;
+			color: #e2e9e3;
+			margin-bottom: 40px;
+			position: relative;
+			z-index: 1;
+		}
+
+		/* 極上のタッチを生むゴールドボタン */
+		.cta-btn {
+			display: inline-block;
+			background-color: var(--orange-gold);
+			color: #ffffff;
+			text-decoration: none;
+			padding: 18px 52px;
+			border-radius: 50px;
+			font-weight: 700;
+			font-size: 1.05rem;
+			letter-spacing: 0.15em;
+			transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+			box-shadow: 0 10px 30px rgba(212, 123, 30, 0.35);
+			position: relative;
+			z-index: 1;
+		}
+
+		.cta-btn:hover {
+			background-color: #ffffff;
+			color: var(--pine-green);
+			transform: translateY(-4px);
+			box-shadow: 0 15px 40px rgba(255, 255, 255, 0.2);
+		}
+
+		/* ==========================================
+		   FOOTER
+		   ========================================== */
+		footer {
+			background-color: var(--text-black);
+			color: #ffffff;
+			padding: 60px 20px;
+			text-align: center;
+			margin-top: 100px;
+		}
+
+		.footer-logo {
+			max-width: 200px;
+			opacity: 0.5;
+			margin-bottom: 24px;
+			filter: grayscale(1) invert(1);
+		}
+
+		.footer-copyright {
+			font-size: 0.8rem;
+			color: rgba(255, 255, 255, 0.4);
+			letter-spacing: 0.05em;
+		}
+
+		/* ==========================================
+		   RESPONSIVE DESIGN (完璧なレスポンシブ)
+		   ========================================== */
+		@media (max-width: 900px) {
+			.about-grid {
+				grid-template-columns: 1fr;
+			}
+			.about-image {
+				min-height: 300px;
+				order: -1; /* スマホ時は画像を上に配置してビジュアル先行に */
+			}
+			.about-image::after {
+				background: linear-gradient(to top, var(--pine-green-dark) 0%, transparent 100%);
+			}
+			.about-body {
+				padding: 40px 24px;
+			}
+			.editorial-grid {
+				grid-template-columns: 1fr;
+				gap: 32px;
+			}
+			.editorial-image-wrap {
+				max-width: 500px;
+				margin: 0 auto;
+			}
+			.admin-grid {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		@media (max-width: 768px) {
+			body {
+				font-size: 15px;
+			}
+			.hero-title {
+				font-size: 1.85rem;
+			}
+			.hero-desc {
+				font-size: 1rem;
+			}
+			.sec-title-jp {
+				font-size: 1.6rem;
+			}
+			.register-flow {
+				grid-template-columns: repeat(2, 1fr);
+			}
+			.white-card {
+				padding: 40px 20px;
+			}
+			.nav-btn {
+				padding: 6px 12px;
+				font-size: 0.75rem;
+			}
+		}
+
+		@media (max-width: 480px) {
+			.register-flow {
+				grid-template-columns: 1fr;
+			}
+			.nav-inner {
+				flex-wrap: wrap;
+				justify-content: center;
+			}
+			.nav-btn {
+				width: calc(33.33% - 8px);
+				text-align: center;
+				padding: 6px 4px;
+			}
+		}
+	</style>
+</head>
+<body>
+
+	<!-- ==========================================
+	     HERO SECTION
+	     ========================================== -->
+	<div class="hero-container">
+		<div class="polygon-bg polygon-bg-left"></div>
+		<div class="polygon-bg polygon-bg-right"></div>
+		
+		<div class="logo-outer">
+			<!-- バナーロゴを最上部に配置。ご指定のバナーに美しくリンクします -->
+			<img src="../images/logo_banner.png" alt="松高.net ロゴ" class="logo-img">
+		</div>
+		
+		<div class="hero-content">
+			<span class="hero-tag">Official Easy Manual</span>
+			<h1 class="hero-title">かんたん操作ガイド</h1>
+			<p class="hero-desc">松高.net の基本的な使い方を、わかりやすいビジュアルに沿って優しく解説します。</p>
+		</div>
+	</div>
+
+	<!-- ==========================================
+	     STICKY NAVIGATION
+	     ========================================== -->
+	<div class="sticky-nav">
+		<div class="nav-inner" aria-label="目次">
+			<a href="#about" class="nav-btn">概要</a>
+			<a href="#register" class="nav-btn">新規登録</a>
+			<a href="#year-admin" class="nav-btn">管理者機能</a>
+			<a href="#faq" class="nav-btn">FAQ</a>
+			<a href="privacy.html" class="nav-btn">利用規約</a>
+		</div>
+	</div>
+
+	<!-- ==========================================
+	     MAIN CONTENT
+	     ========================================== -->
+	<div class="main-content">
+
+		<!-- SECTION 1: ABOUT (コントラスト大・松葉グリーン背景) -->
+		<section id="about" class="section-outer">
+			<div class="sec-title-wrap">
+				<span class="sec-title-en">ABOUT SYSTEM</span>
+				<h2 class="sec-title-jp">このシステムについて</h2>
+			</div>
+
+			<div class="about-card">
+                <div class="about-body">
+                    <p class="about-lead">
+                        松高.net は、同窓生の皆様のための、連絡・お知らせ・イベント管理を簡単に行う統合プラットフォームです。
+                    </p>
+                    <h3 class="about-sub">主な機能</h3>
+                    <ul class="about-list">
+                        <li>プロフィール登録と、手軽なアップデート</li>
+                        <li>重要な連絡やお知らせの一元管理</li>
+                        <li>イベント情報のリアルタイム確認と出欠回答</li>
+                        <li>（管理者向け）高度な名簿検索、会員承認、ニュース・イベント作成ツール</li>
+                    </ul>
+                    <div class="about-note">
+                        <span>💡</span>
+                        <p>はじめての方は、まず以下に記載されている<strong>「新規登録方法」</strong>の手順に沿ってご登録をお願いします。</p>
+                    </div>
+                </div>
+			</div>
+		</section>
+
+		<!-- SECTION 2: REGISTER (白ステージ＆エディトリアル) -->
+		<section id="register" class="section-outer">
+			<div class="sec-title-wrap">
+				<span class="sec-title-en">REGISTRATION FLOW</span>
+				<h2 class="sec-title-jp">新規登録方法</h2>
+			</div>
+
+			<div class="white-card">
+				<div class="register-flow">
+					<div class="flow-card">
+						<span class="flow-num">01</span>
+						<span class="flow-title">トップページへ<br>アクセス</span>
+					</div>
+					<div class="flow-card">
+						<span class="flow-num">02</span>
+						<span class="flow-title">必要事項を<br>丁寧に直接入力</span>
+					</div>
+					<div class="flow-card">
+						<span class="flow-num">03</span>
+						<span class="flow-title">必要に応じて<br>「旧姓」も記入</span>
+					</div>
+					<div class="flow-card">
+						<span class="flow-num">04</span>
+						<span class="flow-title">「登録する」<br>ボタンを押し完了</span>
+					</div>
+				</div>
+
+				<div class="editorial-grid">
+					<div class="editorial-image-wrap">
+						<!-- 入力を連想させる暖かみのあるオシャレなイメージ写真 -->
+						<img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80" alt="スタイリッシュなキーボードの入力操作" class="editorial-image">
+					</div>
+					<div class="editorial-text">
+						<h3>入力で気をつけること</h3>
+						<ul class="styled-ul">
+							<li>フリガナは、登録データと<strong>できる限り近い表記（完全一致）</strong>にしてください。</li>
+							<li>卒業年度は、生年月日を入力すると<strong>自動計算により候補が表示</strong>されます。</li>
+							<li>メールアドレスは事務局からの大切な連絡用のため、<strong>誤入力のないよう</strong>正確にお願いします。</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="editorial-grid" style="direction: rtl; margin-top: 60px;">
+					<div class="editorial-image-wrap" style="direction: ltr;">
+						<!-- モバイルログイン・待合を連想させるスマートフォンのイメージ -->
+						<img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80" alt="スマホ操作" class="editorial-image">
+					</div>
+					<div class="editorial-text" style="direction: ltr;">
+						<h3>登録が完了した後について</h3>
+						<ul class="styled-ul">
+							<li><strong>自動承認の場合：</strong> 入力内容に問題がなく、照合データベースと合致した場合は即時自動承認されます。</li>
+							<li><strong>手動承認（承認待ち）：</strong> 自動承認の条件に沿わない場合は「承認待ち」状態となり、事務局による確認が始まります。</li>
+							<li><strong>マイページ機能：</strong> 「承認待ち」の状態であっても、マイページへのログインや一部閲覧はそのまま可能です。</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- SECTION 3: ADMIN (鮮やかな左右対比カード) -->
+		<section id="year-admin" class="section-outer">
+			<div class="sec-title-wrap">
+				<span class="sec-title-en">ADMINISTRATOR PERMISSION</span>
+				<h2 class="sec-title-jp">学年管理者ができること</h2>
+			</div>
+
+			<p style="text-align: center; max-width: 650px; margin: -20px auto 40px; color: var(--text-muted); line-height: 1.8;">
+				学年管理者に任命されたユーザーは、セキュリティに守られた範囲内において、各学年の名簿検索やイベント作成などの権限をフルに活用できます。
+			</p>
+
+			<div class="admin-grid">
+				<div class="admin-card allow">
+					<div class="admin-card-header">
+						<div class="admin-icon-box">✓</div>
+						<h3 class="admin-card-title">担当できる範囲・操作</h3>
+					</div>
+					<ul class="styled-ul">
+						<li>担当学年の<strong>名簿確認および全文検索</strong></li>
+						<li>担当学年内ユーザーの<strong>ステータス承認・編集</strong></li>
+						<li>自身が作成した<strong>ニュースコンテンツの執筆・編集</strong></li>
+						<li>担当学年向けにカスタマイズされた<strong>イベントの新規企画・編集</strong></li>
+					</ul>
+				</div>
+				
+				<div class="admin-card deny">
+					<div class="admin-card-header">
+						<div class="admin-icon-box">×</div>
+						<h3 class="admin-card-title">制限される主な操作</h3>
+					</div>
+					<ul class="styled-ul">
+						<li><strong>他学年</strong>に属するデータの閲覧や操作全般</li>
+						<li>マスター管理者データの不用意な<strong>編集・アカウント削除</strong></li>
+						<li>システム全体に関わる<strong>セキュリティ・デザイン基本設定</strong>の変更</li>
+					</ul>
+				</div>
+			</div>
+		</section>
+
+		<!-- SECTION 4: FAQ (アコーディオン調モダンカード) -->
+		<section id="faq" class="section-outer">
+			<div class="sec-title-wrap">
+				<span class="sec-title-en">FREQUENTLY ASKED QUESTIONS</span>
+				<h2 class="sec-title-jp">よくあるご質問 (FAQ)</h2>
+			</div>
+
+			<div class="faq-container">
+				<div class="faq-panel">
+					<h4 class="faq-q-text">
+						<span class="faq-badge-q">Q.</span>
+						登録を完了したのに、画面が「承認待ち」のまま変化しません。
+					</h4>
+					<p class="faq-a-text">
+						既存の登録データとの照合結果にズレが生じている可能性（例：旧姓での不一致やフリガナの相違など）があります。お手数ですが、一度ログインし入力内容を見直していただくか、事務局までお問い合わせください。
+					</p>
+				</div>
+
+				<div class="faq-panel">
+					<h4 class="faq-q-text">
+						<span class="faq-badge-q">Q.</span>
+						実家の住所などを簡単に入力するための機能はありますか？
+					</h4>
+					<p class="faq-a-text">
+						郵便番号を入力し、入力欄すぐ横にある「住所検索」ボタンをタップすると、市区町村名までの住所が自動入力されます。その後の番地・マンション名は別途手動にて入力してください。
+					</p>
+				</div>
+
+				<div class="faq-panel">
+					<h4 class="faq-q-text">
+						<span class="faq-badge-q">Q.</span>
+						学年管理者ですが、他学年の名簿が一覧に表示されません。
+					</h4>
+					<p class="faq-a-text">
+						個人情報保護の観点、および同窓会規約に基づき、学年管理者が編集・確認できるのは「ご自身の担当する学年」に属するデータのみとなるよう、強固に保護されています。
+					</p>
+				</div>
+
+				<div class="faq-panel">
+					<h4 class="faq-q-text">
+						<span class="faq-badge-q">Q.</span>
+						不明点があり一人で進められません。どこに相談すればよいですか？
+					</h4>
+					<p class="faq-a-text">
+						一度ガイドラインと入力値（特にメールアドレス・卒業回）をお確かめいただき、解決しない場合は、サイト運営担当へお気軽にメッセージ等でお問い合わせください。
+					</p>
+				</div>
+			</div>
+		</section>
+
+		<!-- SECTION 5: TERMS & CTA (美しく引き締めるグラデーションバナー) -->
+		<section id="terms-link" style="margin-bottom: 0;">
+			<div class="cta-banner">
+				<h2 class="cta-title">利用規約と個人情報の取扱方針</h2>
+				<p class="cta-desc">皆様の大切な個人情報を安全に守るため、事前のご確認をお願いしております。</p>
+				<a class="cta-btn" href="privacy.html">規約に目を通す</a>
+			</div>
+		</section>
+
+	</div>
+
+	<!-- ==========================================
+	     FOOTER
+	     ========================================== -->
+	<footer>
+		<!-- 下部にシンプルなグレースケール調の白ロゴやサイト表記を想定 -->
+		<div style="margin-bottom: 12px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255, 255, 255, 0.8);">松高.net</div>
+		<p class="footer-copyright">
+			最終更新日: 2026-07-15<br>
+			&copy; 2026 松高.net All Rights Reserved.
+		</p>
+	</footer>
+
+</body>
+</html>
