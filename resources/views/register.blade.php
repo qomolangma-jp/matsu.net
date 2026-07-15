@@ -95,13 +95,14 @@
 
                     <!-- フリガナ（姓） -->
                     <div class="mb-3">
-                        <label for="lastNameKana" class="form-label">フリガナ（姓）</label>
+                        <label for="lastNameKana" class="form-label required">フリガナ（姓）</label>
                         <input type="text" 
                                class="form-control @error('last_name_kana') is-invalid @enderror" 
                                id="lastNameKana" 
                                name="last_name_kana" 
                                value="{{ old('last_name_kana') }}" 
-                               placeholder="例：マツネット">
+                               placeholder="例：マツネット"
+                               required>
                         @error('last_name_kana')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -109,14 +110,29 @@
 
                     <!-- フリガナ（名） -->
                     <div class="mb-3">
-                        <label for="firstNameKana" class="form-label">フリガナ（名）</label>
+                        <label for="firstNameKana" class="form-label required">フリガナ（名）</label>
                         <input type="text" 
                                class="form-control @error('first_name_kana') is-invalid @enderror" 
                                id="firstNameKana" 
                                name="first_name_kana" 
                                value="{{ old('first_name_kana') }}" 
-                               placeholder="例：タロウ">
+                               placeholder="例：タロウ"
+                               required>
                         @error('first_name_kana')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- 旧姓 -->
+                    <div class="mb-3">
+                        <label for="formerName" class="form-label">旧姓</label>
+                        <input type="text"
+                               class="form-control @error('former_name') is-invalid @enderror"
+                               id="formerName"
+                               name="former_name"
+                               value="{{ old('former_name') }}"
+                               placeholder="旧姓がある場合のみ入力">
+                        @error('former_name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -182,13 +198,14 @@
 
                     <!-- メールアドレス -->
                     <div class="mb-3">
-                        <label for="email" class="form-label">メールアドレス</label>
+                        <label for="email" class="form-label required">メールアドレス</label>
                         <input type="email" 
                                class="form-control @error('email') is-invalid @enderror" 
                                id="email" 
                                name="email" 
                                value="{{ old('email') }}" 
-                               placeholder="example@mail.com">
+                               placeholder="example@mail.com"
+                               required>
                         @error('email')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

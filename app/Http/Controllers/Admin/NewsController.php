@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class NewsController extends Controller
 {
@@ -82,6 +83,7 @@ class NewsController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:5120',
             'target_graduation_years' => 'nullable|array',
             'target_graduation_years.*' => 'integer|min:1948',
             'is_line_notification' => 'boolean',
@@ -110,6 +112,7 @@ class NewsController extends Controller
             $news = News::create([
                 'title' => $validated['title'],
                 'body' => $validated['body'],
+                'image_path' => $request->file('image')?->store('news-images', 'public'),
                 'target_graduation_years' => !empty($targetYears) ? $targetYears : null,
                 'is_line_notification' => $request->boolean('is_line_notification'),
                 'is_top_display' => $request->boolean('is_top_display'),
@@ -161,11 +164,9 @@ class NewsController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
-        // 学年管理者は自学年関連のニュースのみ編集可能
-        if ($user->role === 'year_admin') {
-            if ($news->graduation_year && $news->graduation_year != $user->graduation_year) {
-                abort(403, '他学年のニュースは編集できません。');
-            }
+        // 編集権限（マスター管理者または作成者）
+        if (!$this->canEditNews($user, $news)) {
+            abort(403, 'このニュースを編集する権限がありません。');
         }
 
         $graduationYears = $this->getGraduationYearsList($user);
@@ -194,16 +195,16 @@ class NewsController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
-        // 学年管理者は自学年関連のニュースのみ更新可能
-        if ($user->role === 'year_admin') {
-            if ($news->target_graduation_years && !in_array($user->graduation_year, $news->target_graduation_years)) {
-                abort(403, '他学年のニュースは更新できません。');
-            }
+        // 編集権限（マスター管理者または作成者）
+        if (!$this->canEditNews($user, $news)) {
+            abort(403, 'このニュースを編集する権限がありません。');
         }
 
         $validated = $request->validate([
             'title'                    => 'required|string|max:255',
             'body'                     => 'required|string',
+            'image'                    => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:5120',
+            'remove_image'             => 'nullable|boolean',
             'target_graduation_years'  => 'nullable|array',
             'target_graduation_years.*'=> 'integer|min:1948',
             'is_top_display'           => 'boolean',
@@ -214,17 +215,37 @@ class NewsController extends Controller
         DB::beginTransaction();
         try {
             $targetYears = $request->input('target_graduation_years', []);
-            if ($user->role === 'year_admin' && !empty($targetYears)) {
+            if ($user->role === 'year_admin') {
                 foreach ($targetYears as $year) {
                     if ($year != $user->graduation_year) {
                         return back()->withErrors(['target_graduation_years' => '自学年以外は選択できません。'])->withInput();
                     }
                 }
+
+                if (empty($targetYears)) {
+                    $targetYears = [$user->graduation_year];
+                }
+            }
+
+            $imagePath = $news->image_path;
+            if ($request->boolean('remove_image')) {
+                if ($imagePath) {
+                    Storage::disk('public')->delete($imagePath);
+                }
+                $imagePath = null;
+            }
+
+            if ($request->hasFile('image')) {
+                if ($imagePath) {
+                    Storage::disk('public')->delete($imagePath);
+                }
+                $imagePath = $request->file('image')->store('news-images', 'public');
             }
 
             $news->update([
                 'title'                  => $validated['title'],
                 'body'                   => $validated['body'],
+                'image_path'             => $imagePath,
                 'target_graduation_years'=> !empty($targetYears) ? $targetYears : null,
                 'is_top_display'         => $request->boolean('is_top_display'),
             ]);
@@ -275,14 +296,16 @@ class NewsController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
-        // 学年管理者は自学年関連のニュースのみ削除可能
-        if ($user->role === 'year_admin') {
-            if ($news->target_graduation_years && !in_array($user->graduation_year, $news->target_graduation_years)) {
-                abort(403, '他学年のニュースは削除できません。');
-            }
+        // 編集権限（マスター管理者または作成者）
+        if (!$this->canEditNews($user, $news)) {
+            abort(403, 'このニュースを削除する権限がありません。');
         }
 
         try {
+            if ($news->image_path) {
+                Storage::disk('public')->delete($news->image_path);
+            }
+
             $news->delete();
 
             return redirect()->route('admin.news.index')
@@ -315,5 +338,17 @@ class NewsController extends Controller
 
         // 学年管理者は自学年のみ
         return [$user->graduation_year];
+    }
+
+    /**
+     * ニュース編集可否
+     */
+    private function canEditNews(User $user, News $news): bool
+    {
+        if ($user->role === 'master_admin') {
+            return true;
+        }
+
+        return (int) $news->created_by === (int) $user->id;
     }
 }

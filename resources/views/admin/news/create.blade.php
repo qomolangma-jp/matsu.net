@@ -11,7 +11,7 @@
                 <i class="bi bi-newspaper"></i> ニュース作成
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.news.store') }}">
+                <form method="POST" action="{{ route('admin.news.store') }}" enctype="multipart/form-data">
                     @csrf
 
                     <!-- タイトル -->
@@ -42,6 +42,20 @@
                         <div class="form-text">
                             <i class="bi bi-info-circle"></i> 改行はそのまま表示されます
                         </div>
+                    </div>
+
+                    <!-- 画像 -->
+                    <div class="mb-3">
+                        <label for="image" class="form-label">画像</label>
+                        <input type="file"
+                               class="form-control @error('image') is-invalid @enderror"
+                               id="image"
+                               name="image"
+                               accept="image/*">
+                        @error('image')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">JPG/PNG/WebP/GIF（最大5MB）</div>
                     </div>
 
                     <!-- 対象卒業年度 -->

@@ -142,6 +142,7 @@ class RegisterController extends Controller
                 'line_id' => $request->line_id,
                 'last_name' => $request->last_name,
                 'first_name' => $request->first_name,
+                'former_name' => $request->former_name,
                 'last_name_kana' => $request->last_name_kana,
                 'first_name_kana' => $request->first_name_kana,
                 'birth_date' => $request->birth_date,

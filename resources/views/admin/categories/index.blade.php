@@ -11,7 +11,7 @@
 
 @section('content')
 <!-- 統計情報 -->
-<div class="row mb-4">
+<div class="row mb-4 stats-summary">
     <div class="col-md-3">
         <div class="stats-card">
             <small>全カテゴリー数</small>

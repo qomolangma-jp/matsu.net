@@ -24,7 +24,7 @@
             <div class="card shadow-lg">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="{{ asset('images/matsu_logo.png') }}" alt="松高.net" style="height: 40px; width: auto;">
+                        <img src="{{ asset('images/logo_banner.png') }}" alt="松高.net" style="height: 40px; width: auto;">
                     </div>
                     <p class="text-center text-muted mb-4">テストユーザーでログイン</p>
                     

@@ -104,18 +104,30 @@
         .stats-card {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            padding: 20px;
+            height: 58px;
+            padding: 6px 12px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
         }
 
         .stats-card h3 {
-            font-size: 2rem;
+            font-size: 1.25rem;
+            line-height: 1;
             margin: 0;
         }
 
         .stats-card small {
             opacity: 0.9;
+            display: block;
+            font-size: 0.72rem;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .form-label.required::after {
@@ -142,11 +154,75 @@
                 border-radius: 6px;
             }
             .stats-card {
-                padding: 12px 16px;
-                margin-bottom: 12px;
+                height: 56px;
+                padding: 6px 10px;
+                margin-bottom: 8px;
+                gap: 1px;
             }
             .stats-card h3 {
-                font-size: 1.5rem;
+                font-size: 1.1rem;
+            }
+            .stats-card small {
+                font-size: 0.68rem;
+            }
+
+            /* 統計カードを1ブロックのリスト表示に切り替え */
+            .stats-summary {
+                background: #ffffff;
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+                margin-left: 0;
+                margin-right: 0;
+                overflow: hidden;
+            }
+
+            .stats-summary > [class*="col-"] {
+                width: 100%;
+                padding-left: 0;
+                padding-right: 0;
+                margin-bottom: 0;
+            }
+
+            .stats-summary > [class*="col-"]:not(:last-child) {
+                border-bottom: 1px solid #f1f3f5;
+            }
+
+            .stats-summary .stats-card {
+                height: auto;
+                min-height: 0;
+                margin-bottom: 0;
+                padding: 10px 12px;
+                border-radius: 0;
+                background: transparent !important;
+                color: #212529;
+                box-shadow: none;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .stats-summary .stats-card small {
+                font-size: 0.78rem;
+                line-height: 1.2;
+                opacity: 0.9;
+                color: #495057;
+                white-space: normal;
+                overflow: visible;
+                text-overflow: clip;
+            }
+
+            .stats-summary .stats-card h3 {
+                font-size: 1rem;
+                line-height: 1;
+                margin: 0;
+                font-weight: 700;
+                color: #212529;
+                text-align: right;
+                white-space: nowrap;
+                flex-shrink: 0;
             }
             .card-header {
                 padding: 10px 14px;
@@ -172,7 +248,7 @@
         <div class="offcanvas-header" style="border-bottom: 1px solid rgba(255,255,255,0.15);">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="{{ asset('images/matsu_logo.png') }}" alt="松高.net" style="height: 28px; width: auto;">
+                    <img src="{{ asset('images/logo_banner.png') }}" alt="松高.net" style="height: 50px; width: auto;">
                     @if(app()->environment('local'))<span class="badge bg-danger" style="font-size:0.45em;">LOCAL</span>@endif
                 </div>
                 <small class="text-white-50">管理画面</small>

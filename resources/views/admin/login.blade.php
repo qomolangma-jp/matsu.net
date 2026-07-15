@@ -13,12 +13,12 @@
 <div class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
     <div class="card shadow" style="width: 100%; max-width: 420px;">
         <div class="card-header text-center py-4" style="background-color: #2c5f2d;">
+            <div class="mb-2">
+                <img src="{{ asset('images/logo_banner.png') }}" alt="松高.net" style="height: 80px; width: auto;">
+            </div>
             <h4 class="mb-0 text-white fw-bold">
                 <i class="bi bi-shield-lock me-2"></i>管理者ログイン
             </h4>
-            <div class="mt-2">
-                <img src="{{ asset('images/matsu_logo.png') }}" alt="松高.net" style="height: 30px; width: auto;">
-            </div>
         </div>
         <div class="card-body p-4">
 

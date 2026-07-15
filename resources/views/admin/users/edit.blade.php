@@ -70,13 +70,14 @@
                     <div class="row">
                         <!-- フリガナ（姓） -->
                         <div class="col-md-6 mb-3">
-                            <label for="lastNameKana" class="form-label">フリガナ（姓）</label>
+                            <label for="lastNameKana" class="form-label required">フリガナ（姓）</label>
                             <input type="text" 
                                    class="form-control @error('last_name_kana') is-invalid @enderror" 
                                    id="lastNameKana" 
                                    name="last_name_kana" 
                                    value="{{ old('last_name_kana', $user->last_name_kana) }}" 
-                                   placeholder="マツネット">
+                                   placeholder="マツネット"
+                                   required>
                             @error('last_name_kana')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -84,17 +85,32 @@
 
                         <!-- フリガナ（名） -->
                         <div class="col-md-6 mb-3">
-                            <label for="firstNameKana" class="form-label">フリガナ（名）</label>
+                            <label for="firstNameKana" class="form-label required">フリガナ（名）</label>
                             <input type="text" 
                                    class="form-control @error('first_name_kana') is-invalid @enderror" 
                                    id="firstNameKana" 
                                    name="first_name_kana" 
                                    value="{{ old('first_name_kana', $user->first_name_kana) }}" 
-                                   placeholder="タロウ">
+                                   placeholder="タロウ"
+                                   required>
                             @error('first_name_kana')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
+
+                    <!-- 旧姓 -->
+                    <div class="mb-3">
+                        <label for="formerName" class="form-label">旧姓</label>
+                        <input type="text"
+                               class="form-control @error('former_name') is-invalid @enderror"
+                               id="formerName"
+                               name="former_name"
+                               value="{{ old('former_name', $user->former_name) }}"
+                               placeholder="旧姓がある場合のみ入力">
+                        @error('former_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <!-- 生年月日 -->
@@ -139,13 +155,14 @@
 
                     <!-- メールアドレス -->
                     <div class="mb-3">
-                        <label for="email" class="form-label">メールアドレス</label>
+                        <label for="email" class="form-label required">メールアドレス</label>
                         <input type="email" 
                                class="form-control @error('email') is-invalid @enderror" 
                                id="email" 
                                name="email" 
                                value="{{ old('email', $user->email) }}" 
-                               placeholder="example@example.com">
+                               placeholder="example@example.com"
+                               required>
                         @error('email')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -202,17 +219,36 @@
 
         <!-- 管理項目 -->
         <div class="col-md-4">
-            <!-- 卒業年度（表示のみ） -->
+            <!-- 卒業年度 -->
             <div class="card mb-4">
                 <div class="card-header">
                     <i class="bi bi-mortarboard"></i> 卒業年度
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-secondary mb-0">
-                        <h4 class="mb-1">{{ $user->graduation_year }}年</h4>
-                        <p class="mb-0 text-muted">高校{{ $user->graduation_year - 1947 }}回期</p>
-                    </div>
-                    <small class="text-muted">※卒業年度は変更できません</small>
+                    @if(Auth::user()->role === 'master_admin')
+                        <label for="graduationYear" class="form-label required">卒業年度</label>
+                        <select class="form-select @error('graduation_year') is-invalid @enderror"
+                                id="graduationYear"
+                                name="graduation_year"
+                                required>
+                            @foreach($graduationYears as $year)
+                                <option value="{{ $year }}" {{ (int) old('graduation_year', $user->graduation_year) === (int) $year ? 'selected' : '' }}>
+                                    {{ $year }}年（高校{{ $year - 1947 }}回期）
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">※マスター管理者のみ変更可能です</small>
+                    @else
+                        <input type="hidden" name="graduation_year" value="{{ $user->graduation_year }}">
+                        <div class="alert alert-secondary mb-0">
+                            <h4 class="mb-1">{{ $user->graduation_year }}年</h4>
+                            <p class="mb-0 text-muted">高校{{ $user->graduation_year - 1947 }}回期</p>
+                        </div>
+                        <small class="text-muted">※卒業年度の変更はマスター管理者のみ可能です</small>
+                    @endif
+                    @error('graduation_year')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 

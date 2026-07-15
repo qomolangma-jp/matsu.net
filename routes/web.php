@@ -124,6 +124,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserManagementController::class, 'index'])->name('index');
         Route::get('/export', [UserManagementController::class, 'export'])->name('export');
+        Route::post('/bulk-action', [UserManagementController::class, 'bulkAction'])->name('bulk-action');
         Route::get('/{user}/edit', [UserManagementController::class, 'edit'])->name('edit');
         Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
         Route::post('/{user}/approve', [UserManagementController::class, 'approve'])->name('approve');

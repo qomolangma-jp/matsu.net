@@ -72,7 +72,7 @@
 </div>
 
 <!-- 統計情報 -->
-<div class="row mb-4">
+<div class="row mb-4 stats-summary">
     <div class="col-md col-sm-6 mb-2">
         <div class="stats-card" style="background: linear-gradient(135deg, #6c757d, #495057);">
             <small>対象者数</small>

@@ -11,7 +11,7 @@
 
 @section('content')
 <!-- 統計情報 -->
-<div class="row g-2 mb-3">
+<div class="row g-2 mb-3 stats-summary">
     <div class="col-6 col-md-3">
         <div class="stats-card">
             <small>総登録者数</small>
@@ -105,13 +105,29 @@
             <i class="bi bi-list-ul"></i> 名簿一覧
             <span class="badge bg-secondary ms-2">{{ $users->total() }}件</span>
         </span>
+        <form id="bulkActionForm" method="POST" action="{{ route('admin.users.bulk-action') }}" class="d-flex gap-2 align-items-center">
+            @csrf
+            <select name="bulk_action" id="bulkActionSelect" class="form-select form-select-sm" style="width: 180px;">
+                <option value="">一括操作を選択</option>
+                <option value="approve">承認済みに変更</option>
+                <option value="set_role_year_admin">権限を学年管理者へ変更</option>
+                <option value="set_role_general">権限を一般ユーザーへ変更</option>
+                <option value="delete">削除</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary" id="bulkActionSubmit">
+                実行
+            </button>
+        </form>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:40px;">ID</th>
+                        <th style="width:44px;" class="text-center">
+                            <input type="checkbox" class="form-check-input" id="selectAllUsers" title="全選択">
+                        </th>
+                        <th style="width:52px;">ID</th>
                         <th>
                             <a href="?{{ http_build_query(array_merge(request()->all(), ['sort_by' => 'graduation_year', 'sort_order' => $sortBy === 'graduation_year' && $sortOrder === 'desc' ? 'asc' : 'desc'])) }}" class="text-decoration-none text-dark">
                                 年度
@@ -120,60 +136,33 @@
                                 @endif
                             </a>
                         </th>
+                        <th style="width:130px;">権限/承認</th>
                         <th>氏名</th>
-                        <th class="d-none d-md-table-cell">メールアドレス</th>
-                        <th class="d-none d-lg-table-cell">地区会</th>
-                        <th class="d-none d-lg-table-cell">権限</th>
-                        <th class="d-none d-md-table-cell">郵送</th>
-                        <th>承認</th>
-                        <th style="width:80px;">操作</th>
+                        <th style="width:90px;">郵送</th>
+                        <th style="width:170px;">操作</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($users as $user)
                         <tr>
-                            <td>{{ $user->id }}</td>
-                            <td style="white-space:nowrap;">
+                            <td class="text-center align-middle">
+                                <input type="checkbox" class="form-check-input row-user-checkbox" name="selected_user_ids[]" value="{{ $user->id }}" form="bulkActionForm">
+                            </td>
+                            <td class="align-middle">{{ $user->id }}</td>
+                            <td style="white-space:nowrap;" class="align-middle">
                                 <strong>{{ $user->graduation_year }}</strong><br>
                                 <small class="text-muted">{{ $user->graduation_year - 1947 }}回</small>
                             </td>
-                            <td style="white-space:nowrap;">
-                                <strong>{{ $user->last_name }} {{ $user->first_name }}</strong><br>
-                                <small class="text-muted">{{ $user->last_name_kana }} {{ $user->first_name_kana }}</small>
-                            </td>
-                            <td class="d-none d-md-table-cell">
-                                @if($user->email)
-                                    <a href="mailto:{{ $user->email }}" class="small">{{ $user->email }}</a>
-                                @else
-                                    <span class="text-muted">-</span>
+                            <td class="align-middle" style="white-space:nowrap;">
+                                @if($user->role !== 'general')
+                                    @if($user->role === 'master_admin')
+                                        <span class="badge bg-danger">マスター</span>
+                                    @elseif($user->role === 'year_admin')
+                                        <span class="badge bg-primary">学年管理者</span>
+                                    @endif
+                                    <br>
                                 @endif
-                            </td>
-                            <td class="d-none d-lg-table-cell">
-                                @if($user->categories->count() > 0)
-                                    @foreach($user->categories as $category)
-                                        <span class="badge bg-info me-1">{{ $category->name }}</span>
-                                    @endforeach
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td class="d-none d-lg-table-cell">
-                                @if($user->role === 'master_admin')
-                                    <span class="badge bg-danger">マスター</span>
-                                @elseif($user->role === 'year_admin')
-                                    <span class="badge bg-primary">学年</span>
-                                @else
-                                    <span class="badge bg-secondary">一般</span>
-                                @endif
-                            </td>
-                            <td class="d-none d-md-table-cell">
-                                @if($user->mail_unreachable)
-                                    <span class="badge bg-danger">不達</span>
-                                @else
-                                    <span class="badge bg-success">正常</span>
-                                @endif
-                            </td>
-                            <td style="white-space:nowrap;">
+
                                 @if($user->approval_status === 'approved')
                                     <span class="badge bg-success">承認済</span>
                                 @elseif($user->approval_status === 'pending')
@@ -182,23 +171,32 @@
                                     <span class="badge bg-secondary">却下</span>
                                 @endif
                             </td>
-                            <td style="white-space:nowrap;">
-                                <a href="{{ route('admin.users.edit', $user) }}"
-                                   class="btn btn-outline-primary btn-sm"
-                                   title="編集">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button type="button"
-                                        class="btn btn-outline-danger btn-sm"
-                                        title="削除"
-                                        onclick="deleteUser({{ $user->id }}, '{{ $user->full_name }}')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                            <td style="white-space:nowrap;" class="align-middle">
+                                <strong>{{ $user->last_name }} {{ $user->first_name }}</strong><br>
+                                <small class="text-muted">{{ $user->last_name_kana }} {{ $user->first_name_kana }}</small>
+                            </td>
+                            <td class="align-middle" style="white-space:nowrap;">
+                                @if($user->mail_unreachable)
+                                    <span class="badge bg-danger">不達</span>
+                                @else
+                                    <span class="badge bg-success">正常</span>
+                                @endif
+                            </td>
+                            <td class="align-middle">
+                                <select class="form-select form-select-sm"
+                                        onchange="handleRowAction(this, {{ $user->id }}, @js($user->full_name))">
+                                    <option value="">操作を選択</option>
+                                    <option value="edit">編集</option>
+                                    @if($user->approval_status !== 'approved')
+                                        <option value="approve">承認</option>
+                                    @endif
+                                    <option value="delete">削除</option>
+                                </select>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">
+                            <td colspan="7" class="text-center py-4 text-muted">
                                 該当するユーザーが見つかりませんでした。
                             </td>
                         </tr>
@@ -238,6 +236,87 @@
 
 @push('scripts')
 <script>
+const bulkActionForm = document.getElementById('bulkActionForm');
+const bulkActionSelect = document.getElementById('bulkActionSelect');
+const selectAllUsers = document.getElementById('selectAllUsers');
+
+if (selectAllUsers) {
+    selectAllUsers.addEventListener('change', function () {
+        document.querySelectorAll('.row-user-checkbox').forEach((checkbox) => {
+            checkbox.checked = selectAllUsers.checked;
+        });
+    });
+}
+
+document.querySelectorAll('.row-user-checkbox').forEach((checkbox) => {
+    checkbox.addEventListener('change', function () {
+        const rowCheckboxes = document.querySelectorAll('.row-user-checkbox');
+        const checkedCount = document.querySelectorAll('.row-user-checkbox:checked').length;
+        if (selectAllUsers) {
+            selectAllUsers.checked = rowCheckboxes.length > 0 && checkedCount === rowCheckboxes.length;
+            selectAllUsers.indeterminate = checkedCount > 0 && checkedCount < rowCheckboxes.length;
+        }
+    });
+});
+
+if (bulkActionForm) {
+    bulkActionForm.addEventListener('submit', function (event) {
+        const selectedUsers = document.querySelectorAll('.row-user-checkbox:checked');
+
+        if (!bulkActionSelect.value) {
+            event.preventDefault();
+            alert('一括操作を選択してください。');
+            return;
+        }
+
+        if (selectedUsers.length === 0) {
+            event.preventDefault();
+            alert('対象ユーザーを選択してください。');
+            return;
+        }
+
+        let message = `${selectedUsers.length}名に対して処理を実行します。よろしいですか？`;
+        if (bulkActionSelect.value === 'approve') {
+            message = `${selectedUsers.length}名を承認済みに変更します。よろしいですか？`;
+        }
+        if (bulkActionSelect.value === 'delete') {
+            message = `${selectedUsers.length}名を削除します。\nこの操作は取り消せません。よろしいですか？`;
+        }
+        if (bulkActionSelect.value === 'set_role_year_admin') {
+            message = `${selectedUsers.length}名の権限を学年管理者へ変更します。よろしいですか？`;
+        }
+        if (bulkActionSelect.value === 'set_role_general') {
+            message = `${selectedUsers.length}名の権限を一般ユーザーへ変更します。よろしいですか？`;
+        }
+
+        if (!confirm(message)) {
+            event.preventDefault();
+        }
+    });
+}
+
+function handleRowAction(selectElement, userId, userName) {
+    const action = selectElement.value;
+    if (!action) {
+        return;
+    }
+
+    if (action === 'edit') {
+        window.location.href = `/admin/users/${userId}/edit`;
+        return;
+    }
+
+    if (action === 'approve') {
+        approveUser(userId, userName);
+    }
+
+    if (action === 'delete') {
+        deleteUser(userId, userName);
+    }
+
+    selectElement.value = '';
+}
+
 function approveUser(userId, userName) {
     if (confirm(`${userName}さんを承認しますか？`)) {
         const form = document.getElementById('approveForm');

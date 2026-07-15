@@ -20,6 +20,7 @@ class User extends Authenticatable
         'line_id',
         'last_name',
         'first_name',
+        'former_name',
         'last_name_kana',
         'first_name_kana',
         'birth_date',

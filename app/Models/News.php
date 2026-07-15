@@ -14,6 +14,7 @@ class News extends Model
     protected $fillable = [
         'title',
         'body',
+        'image_path',
         'target_graduation_years',
         'is_line_notification',
         'is_top_display',

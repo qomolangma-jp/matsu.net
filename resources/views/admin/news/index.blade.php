@@ -23,6 +23,7 @@
                 <thead class="table-light">
                     <tr>
                         <th style="width: 60px;">ID</th>
+                        <th style="width: 84px;">画像</th>
                         <th>タイトル</th>
                         <th>対象学年</th>
                         <th>LINE送信</th>
@@ -36,6 +37,16 @@
                     @forelse($news as $item)
                         <tr>
                             <td>{{ $item->id }}</td>
+                            <td>
+                                @if($item->image_path)
+                                    <img src="{{ asset('storage/' . $item->image_path) }}"
+                                         alt="サムネイル"
+                                         class="rounded border"
+                                         style="width: 64px; height: 64px; object-fit: cover;">
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </td>
                             <td>
                                 <strong>{{ $item->title }}</strong><br>
                                 <small class="text-muted">{{ Str::limit($item->body, 80) }}</small>
@@ -70,22 +81,29 @@
                                 <small>{{ $item->creator?->full_name }}</small>
                             </td>
                             <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('admin.news.edit', $item->id) }}" 
-                                       class="btn btn-outline-primary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button type="button" 
-                                            class="btn btn-outline-danger" 
-                                            onclick="deleteNews({{ $item->id }}, '{{ $item->title }}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
+                                @php
+                                    $canManage = Auth::user()->role === 'master_admin' || (int) Auth::id() === (int) $item->created_by;
+                                @endphp
+                                @if($canManage)
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ route('admin.news.edit', $item->id) }}"
+                                           class="btn btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-outline-danger"
+                                                onclick="deleteNews({{ $item->id }}, '{{ $item->title }}')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                @else
+                                    <span class="badge bg-light text-dark border">編集不可</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
+                            <td colspan="9" class="text-center py-4 text-muted">
                                 ニュースがありません。
                             </td>
                         </tr>

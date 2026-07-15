@@ -76,17 +76,21 @@ class MyPageController extends Controller
         $validated = $request->validate([
             'last_name' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
-            'last_name_kana' => 'nullable|string|max:255',
-            'first_name_kana' => 'nullable|string|max:255',
+            'former_name' => 'nullable|string|max:255',
+            'last_name_kana' => 'required|string|max:255',
+            'first_name_kana' => 'required|string|max:255',
             'birth_date' => 'required|date',
-            'email' => 'nullable|email|max:255',
+            'email' => 'required|email|max:255',
             'postal_code' => 'nullable|string|max:10',
             'address' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:20',
         ], [
             'last_name.required' => '姓は必須です。',
             'first_name.required' => '名は必須です。',
+            'last_name_kana.required' => 'フリガナ（姓）は必須です。',
+            'first_name_kana.required' => 'フリガナ（名）は必須です。',
             'birth_date.required' => '生年月日は必須です。',
+            'email.required' => 'メールアドレスは必須です。',
             'email.email' => 'メールアドレスの形式が正しくありません。',
         ]);
 

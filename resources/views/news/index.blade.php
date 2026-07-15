@@ -50,6 +50,12 @@
                         @foreach($news as $item)
                             <a href="{{ route('news.show', $item) }}" class="list-group-item list-group-item-action py-3">
                                 <div class="d-flex justify-content-between align-items-start">
+                                    @if($item->image_path)
+                                        <img src="{{ asset('storage/' . $item->image_path) }}"
+                                             alt="ニュース画像"
+                                             class="rounded border me-3"
+                                             style="width: 64px; height: 64px; object-fit: cover;">
+                                    @endif
                                     <div class="flex-grow-1 me-3">
                                         @if($item->is_top_display)
                                             <span class="badge me-1" style="background-color: #2c5f2d;">重要</span>

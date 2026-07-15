@@ -15,6 +15,35 @@
                     @csrf
                     @method('PUT')
 
+                    <!-- 公開設定 -->
+                    <div class="mb-4 p-3 rounded border">
+                        <label class="form-label mb-2">公開設定</label>
+                        <div class="form-check form-switch d-flex align-items-center gap-2">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="is_published"
+                                   name="is_published"
+                                   value="1"
+                                   {{ old('is_published', $event->is_published) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_published">公開する</label>
+                            <span id="publishStateBadge" class="badge"></span>
+                        </div>
+                    </div>
+
+                    <!-- 開催日時 -->
+                    <div class="mb-3">
+                        <label for="event_date" class="form-label">開催日時 <span class="text-danger">*</span></label>
+                        <input type="datetime-local"
+                               class="form-control @error('event_date') is-invalid @enderror"
+                               id="event_date"
+                               name="event_date"
+                               value="{{ old('event_date', $event->event_date?->format('Y-m-d\TH:i')) }}"
+                               required>
+                        @error('event_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <!-- タイトル -->
                     <div class="mb-3">
                         <label for="title" class="form-label">イベント名 <span class="text-danger">*</span></label>
@@ -43,44 +72,15 @@
                     </div>
 
                     <div class="row">
-                        <!-- 開催日時 -->
+                        <!-- 開催会場 -->
                         <div class="col-md-6 mb-3">
-                            <label for="event_date" class="form-label">開催日時 <span class="text-danger">*</span></label>
-                            <input type="datetime-local" 
-                                   class="form-control @error('event_date') is-invalid @enderror" 
-                                   id="event_date" 
-                                   name="event_date" 
-                                   value="{{ old('event_date', $event->event_date?->format('Y-m-d\TH:i')) }}" 
-                                   required>
-                            @error('event_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- 開催場所 -->
-                        <div class="col-md-6 mb-3">
-                            <label for="location" class="form-label">開催場所</label>
-                            <input type="text" 
-                                   class="form-control @error('location') is-invalid @enderror" 
-                                   id="location" 
-                                   name="location" 
+                            <label for="location" class="form-label">開催会場</label>
+                            <input type="text"
+                                   class="form-control @error('location') is-invalid @enderror"
+                                   id="location"
+                                   name="location"
                                    value="{{ old('location', $event->location) }}">
                             @error('location')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <!-- 募集締切 -->
-                        <div class="col-md-6 mb-3">
-                            <label for="deadline" class="form-label">募集締切日</label>
-                            <input type="datetime-local" 
-                                   class="form-control @error('deadline') is-invalid @enderror" 
-                                   id="deadline" 
-                                   name="deadline" 
-                                   value="{{ old('deadline', $event->deadline?->format('Y-m-d\TH:i')) }}">
-                            @error('deadline')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -88,16 +88,29 @@
                         <!-- 定員 -->
                         <div class="col-md-6 mb-3">
                             <label for="capacity" class="form-label">定員</label>
-                            <input type="number" 
-                                   class="form-control @error('capacity') is-invalid @enderror" 
-                                   id="capacity" 
-                                   name="capacity" 
-                                   value="{{ old('capacity', $event->capacity) }}" 
+                            <input type="number"
+                                   class="form-control @error('capacity') is-invalid @enderror"
+                                   id="capacity"
+                                   name="capacity"
+                                   value="{{ old('capacity', $event->capacity) }}"
                                    min="1">
                             @error('capacity')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
+
+                    <!-- 募集締切日時 -->
+                    <div class="mb-3">
+                        <label for="deadline" class="form-label">募集締切日時</label>
+                        <input type="datetime-local"
+                               class="form-control @error('deadline') is-invalid @enderror"
+                               id="deadline"
+                               name="deadline"
+                               value="{{ old('deadline', $event->deadline?->format('Y-m-d\TH:i')) }}">
+                        @error('deadline')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <!-- 対象学年（編集不可） -->
@@ -106,23 +119,6 @@
                         <div class="alert alert-secondary">
                             <i class="bi bi-lock"></i> {{ $event->target_year_display }}
                             <small class="d-block mt-1">※ 対象学年は作成後に変更できません</small>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <!-- 公開状態 -->
-                    <div class="mb-4">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" 
-                                   type="checkbox" 
-                                   id="is_published" 
-                                   name="is_published" 
-                                   value="1"
-                                   {{ old('is_published', $event->is_published) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="is_published">
-                                公開する
-                            </label>
                         </div>
                     </div>
 
@@ -223,3 +219,30 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const publishToggle = document.getElementById('is_published');
+    const publishStateBadge = document.getElementById('publishStateBadge');
+
+    if (!publishToggle || !publishStateBadge) {
+        return;
+    }
+
+    function refreshPublishState() {
+        if (publishToggle.checked) {
+            publishStateBadge.className = 'badge bg-success';
+            publishStateBadge.textContent = '公開中';
+            return;
+        }
+
+        publishStateBadge.className = 'badge bg-secondary';
+        publishStateBadge.textContent = '非公開';
+    }
+
+    publishToggle.addEventListener('change', refreshPublishState);
+    refreshPublishState();
+});
+</script>
+@endpush

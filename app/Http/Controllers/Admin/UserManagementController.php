@@ -202,7 +202,18 @@ class UserManagementController extends Controller
         // カテゴリーリスト
         $categories = $this->getCategoriesList($admin);
 
-        return view('admin.users.edit', compact('user', 'categories'));
+        // 卒業年度リスト（マスター管理者のみ編集で使用）
+        $graduationYears = User::query()
+            ->select('graduation_year')
+            ->distinct()
+            ->orderBy('graduation_year', 'desc')
+            ->pluck('graduation_year');
+
+        if (!$graduationYears->contains($user->graduation_year)) {
+            $graduationYears = $graduationYears->prepend($user->graduation_year)->sortDesc()->values();
+        }
+
+        return view('admin.users.edit', compact('user', 'categories', 'graduationYears'));
     }
 
     /**
@@ -222,17 +233,24 @@ class UserManagementController extends Controller
             abort(403, '他学年のユーザーは更新できません。');
         }
 
+        // 卒業年度はマスター管理者のみ変更可能
+        if ($admin->role !== 'master_admin') {
+            $request->merge(['graduation_year' => $user->graduation_year]);
+        }
+
         // バリデーション
         $validated = $request->validate([
             'last_name' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
-            'last_name_kana' => 'nullable|string|max:255',
-            'first_name_kana' => 'nullable|string|max:255',
+            'former_name' => 'nullable|string|max:255',
+            'last_name_kana' => 'required|string|max:255',
+            'first_name_kana' => 'required|string|max:255',
             'birth_date' => 'required|date',
-            'email' => 'nullable|email|max:255',
+            'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
             'postal_code' => 'nullable|string|max:8',
             'address' => 'nullable|string',
+            'graduation_year' => 'required|integer|min:1900|max:2100',
             'categories' => 'nullable|array',
             'categories.*' => 'exists:categories,id',
             'mail_unreachable' => 'boolean',
@@ -245,6 +263,11 @@ class UserManagementController extends Controller
             // 学年管理者はroleを変更できない
             if ($admin->role === 'year_admin') {
                 unset($validated['role']);
+            }
+
+            // 卒業年度はマスター管理者のみ変更可能
+            if ($admin->role !== 'master_admin') {
+                unset($validated['graduation_year']);
             }
 
             // 承認ステータスが変更された場合
@@ -471,6 +494,151 @@ class UserManagementController extends Controller
             return redirect()
                 ->back()
                 ->with('error', '削除処理に失敗しました。');
+        }
+    }
+
+    /**
+     * ユーザー一括操作（承認/削除/権限変更）
+     */
+    public function bulkAction(Request $request)
+    {
+        $admin = Auth::user();
+
+        if (!in_array($admin->role, ['year_admin', 'master_admin'])) {
+            abort(403, '管理者権限が必要です。');
+        }
+
+        $validated = $request->validate([
+            'bulk_action' => 'required|in:approve,delete,set_role_year_admin,set_role_general',
+            'selected_user_ids' => 'required|array|min:1',
+            'selected_user_ids.*' => 'integer|exists:users,id',
+        ]);
+
+        if (in_array($validated['bulk_action'], ['set_role_year_admin', 'set_role_general'], true)
+            && $admin->role !== 'master_admin') {
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', '権限変更の一括操作はマスター管理者のみ実行できます。');
+        }
+
+        $targetUsers = User::query()
+            ->filterByPermission($admin)
+            ->whereIn('id', $validated['selected_user_ids'])
+            ->get();
+
+        if ($targetUsers->isEmpty()) {
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', '対象ユーザーが見つかりませんでした。');
+        }
+
+        $processed = 0;
+        $skippedSelfDelete = 0;
+
+        DB::beginTransaction();
+        try {
+            if ($validated['bulk_action'] === 'approve') {
+                foreach ($targetUsers as $user) {
+                    $user->update([
+                        'approval_status' => 'approved',
+                        'approved_at' => now(),
+                        'approved_by' => $admin->id,
+                        'approval_note' => '管理者による一括承認',
+                    ]);
+
+                    $userFullName = str_replace([' ', '　'], '', $user->last_name . $user->first_name);
+                    DB::table('reference_rosters')
+                        ->whereRaw("REPLACE(REPLACE(name, ' ', ''), '　', '') = ?", [$userFullName])
+                        ->where('graduation_term', 'LIKE', '%高校' . ($user->graduation_year - 1947) . '回期%')
+                        ->update(['is_registered' => true]);
+
+                    $processed++;
+                }
+
+                DB::commit();
+
+                Log::info('Bulk user approval completed', [
+                    'approved_count' => $processed,
+                    'admin_id' => $admin->id,
+                ]);
+
+                return redirect()
+                    ->route('admin.users.index')
+                    ->with('success', "{$processed}名を承認済みに更新しました。");
+            }
+
+            if (in_array($validated['bulk_action'], ['set_role_year_admin', 'set_role_general'], true)) {
+                $newRole = $validated['bulk_action'] === 'set_role_year_admin' ? 'year_admin' : 'general';
+
+                foreach ($targetUsers as $user) {
+                    $user->update([
+                        'role' => $newRole,
+                    ]);
+                    $processed++;
+                }
+
+                DB::commit();
+
+                Log::info('Bulk user role update completed', [
+                    'updated_count' => $processed,
+                    'new_role' => $newRole,
+                    'admin_id' => $admin->id,
+                ]);
+
+                $roleLabel = $newRole === 'year_admin' ? '学年管理者' : '一般ユーザー';
+
+                return redirect()
+                    ->route('admin.users.index')
+                    ->with('success', "{$processed}名の権限を{$roleLabel}に変更しました。");
+            }
+
+            foreach ($targetUsers as $user) {
+                if ($user->id === $admin->id) {
+                    $skippedSelfDelete++;
+                    continue;
+                }
+
+                $user->categories()->detach();
+
+                $userFullName = str_replace([' ', '　'], '', $user->last_name . $user->first_name);
+                DB::table('reference_rosters')
+                    ->whereRaw("REPLACE(REPLACE(name, ' ', ''), '　', '') = ?", [$userFullName])
+                    ->where('graduation_term', 'LIKE', '%高校' . ($user->graduation_year - 1947) . '回期%')
+                    ->update(['is_registered' => false]);
+
+                $user->delete();
+                $processed++;
+            }
+
+            DB::commit();
+
+            Log::info('Bulk user deletion completed', [
+                'deleted_count' => $processed,
+                'skipped_self_delete' => $skippedSelfDelete,
+                'admin_id' => $admin->id,
+            ]);
+
+            $message = "{$processed}名を削除しました。";
+            if ($skippedSelfDelete > 0) {
+                $message .= ' 自分自身は削除対象から除外しました。';
+            }
+
+            return redirect()
+                ->route('admin.users.index')
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk user operation failed: ' . $e->getMessage(), [
+                'admin_id' => $admin->id,
+                'action' => $validated['bulk_action'],
+                'selected_user_ids' => $validated['selected_user_ids'],
+                'exception' => $e,
+            ]);
+
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', '一括処理に失敗しました。');
         }
     }
 

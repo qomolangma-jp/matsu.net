@@ -12,7 +12,7 @@
 @section('content')
 
 {{-- 統計カード --}}
-<div class="row g-2 mb-4">
+<div class="row g-2 mb-4 stats-summary">
     <div class="col-6 col-md-4">
         <div class="stats-card">
             <small>総ユーザー数</small>

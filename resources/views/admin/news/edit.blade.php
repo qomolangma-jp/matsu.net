@@ -11,7 +11,7 @@
                 <i class="bi bi-pencil"></i> ニュース編集
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.news.update', $news->id) }}">
+                <form method="POST" action="{{ route('admin.news.update', $news->id) }}" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
@@ -40,6 +40,29 @@
                         @error('body')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                    </div>
+
+                    <!-- 画像 -->
+                    <div class="mb-3">
+                        <label for="image" class="form-label">画像</label>
+                        @if($news->image_path)
+                            <div class="mb-2">
+                                <img src="{{ asset('storage/' . $news->image_path) }}" alt="添付画像" class="img-fluid rounded border" style="max-height: 220px;">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="remove_image" name="remove_image" value="1">
+                                <label class="form-check-label text-danger" for="remove_image">現在の画像を削除する</label>
+                            </div>
+                        @endif
+                        <input type="file"
+                               class="form-control @error('image') is-invalid @enderror"
+                               id="image"
+                               name="image"
+                               accept="image/*">
+                        @error('image')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">JPG/PNG/WebP/GIF（最大5MB）</div>
                     </div>
 
                     <!-- 対象卒業年度 -->

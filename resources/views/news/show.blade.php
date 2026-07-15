@@ -38,6 +38,12 @@
                     </div>
                 @endif
 
+                @if($news->image_path)
+                    <div class="mb-3">
+                        <img src="{{ asset('storage/' . $news->image_path) }}" alt="ニュース画像" class="img-fluid rounded border">
+                    </div>
+                @endif
+
                 <div class="news-body" style="line-height: 1.8; white-space: pre-wrap;">{{ $news->body }}</div>
 
                 @if($news->creator)
