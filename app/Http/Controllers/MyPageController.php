@@ -77,6 +77,7 @@ class MyPageController extends Controller
             'last_name' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
             'former_name' => 'nullable|string|max:255',
+            'gender' => 'required|in:male,female,other',
             'last_name_kana' => 'required|string|max:255',
             'first_name_kana' => 'required|string|max:255',
             'birth_date' => 'required|date',
@@ -87,6 +88,8 @@ class MyPageController extends Controller
         ], [
             'last_name.required' => '姓は必須です。',
             'first_name.required' => '名は必須です。',
+            'gender.required' => '性別は必須です。',
+            'gender.in' => '性別の選択が正しくありません。',
             'last_name_kana.required' => 'フリガナ（姓）は必須です。',
             'first_name_kana.required' => 'フリガナ（名）は必須です。',
             'birth_date.required' => '生年月日は必須です。',

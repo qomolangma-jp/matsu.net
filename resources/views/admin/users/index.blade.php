@@ -85,6 +85,14 @@
                         <option value="0" {{ $filters['mail_unreachable'] === '0' ? 'selected' : '' }}>正常</option>
                     </select>
                 </div>
+                <div class="col-6 col-md-2">
+                    <select class="form-select form-select-sm" name="role">
+                        <option value="">権限: すべて</option>
+                        <option value="general" {{ $filters['role'] === 'general' ? 'selected' : '' }}>一般ユーザー</option>
+                        <option value="year_admin" {{ $filters['role'] === 'year_admin' ? 'selected' : '' }}>学年管理者</option>
+                        <option value="master_admin" {{ $filters['role'] === 'master_admin' ? 'selected' : '' }}>マスター管理者</option>
+                    </select>
+                </div>
             </div>
             <div class="mt-2 d-flex gap-2">
                 <button type="submit" class="btn btn-primary btn-sm">
@@ -138,6 +146,7 @@
                         </th>
                         <th style="width:130px;">権限/承認</th>
                         <th>氏名</th>
+                        <th style="width:80px;">性別</th>
                         <th style="width:90px;">郵送</th>
                         <th style="width:170px;">操作</th>
                     </tr>
@@ -184,6 +193,17 @@
                                 <small class="text-muted">{{ $user->last_name_kana }} {{ $user->first_name_kana }}</small>
                             </td>
                             <td class="align-middle" style="white-space:nowrap;">
+                                @if($user->gender === 'male')
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">男性</span>
+                                @elseif($user->gender === 'female')
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">女性</span>
+                                @elseif($user->gender === 'other')
+                                    <span class="badge bg-secondary">その他</span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td class="align-middle" style="white-space:nowrap;">
                                 @if($user->mail_unreachable)
                                     <span class="badge bg-danger">不達</span>
                                 @else
@@ -209,7 +229,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
+                            <td colspan="8" class="text-center py-4 text-muted">
                                 該当するユーザーが見つかりませんでした。
                             </td>
                         </tr>

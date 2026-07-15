@@ -137,6 +137,8 @@ class UserManagementController extends Controller
                 '回期',
                 '姓',
                 '名',
+                '旧姓',
+                '性別',
                 '姓（カナ）',
                 '名（カナ）',
                 '生年月日',
@@ -160,6 +162,8 @@ class UserManagementController extends Controller
                     $user->graduation_year - 1947,
                     $user->last_name,
                     $user->first_name,
+                    $user->former_name,
+                    $this->getGenderLabel($user->gender),
                     $user->last_name_kana,
                     $user->first_name_kana,
                     $user->birth_date?->format('Y-m-d'),
@@ -237,6 +241,7 @@ class UserManagementController extends Controller
             'last_name' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
             'former_name' => 'nullable|string|max:255',
+            'gender' => 'required|in:male,female,other',
             'last_name_kana' => 'required|string|max:255',
             'first_name_kana' => 'required|string|max:255',
             'birth_date' => 'required|date',
@@ -700,6 +705,18 @@ class UserManagementController extends Controller
             'approved' => '承認済み',
             'rejected' => '却下',
         ][$status] ?? $status;
+    }
+
+    /**
+     * 性別ラベル取得
+     */
+    private function getGenderLabel(?string $gender): string
+    {
+        return [
+            'male' => '男性',
+            'female' => '女性',
+            'other' => 'その他',
+        ][$gender] ?? ($gender ?? '');
     }
 
     /**

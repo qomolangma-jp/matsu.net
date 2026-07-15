@@ -143,6 +143,7 @@ class RegisterController extends Controller
                 'last_name' => $request->last_name,
                 'first_name' => $request->first_name,
                 'former_name' => $request->former_name,
+                'gender' => $request->gender,
                 'last_name_kana' => $request->last_name_kana,
                 'first_name_kana' => $request->first_name_kana,
                 'birth_date' => $request->birth_date,
@@ -209,20 +210,37 @@ class RegisterController extends Controller
     private function matchWithReferenceRoster(RegisterRequest $request): array
     {
         $graduationTerm = $request->graduation_term; // 例: 高校51回期
-        $searchName = $request->getSearchName(); // スペース除去済み氏名
-        $searchKana = $request->getSearchKana(); // スペース除去済みカナ（nullの場合あり）
+        $searchName = $request->getSearchName(); // 現在の姓+名（スペース除去済み）
+        $searchKana = $this->normalizeKanaForMatch($request->getSearchKana() ?? '');
+        $searchGender = $request->input('gender');
+        $searchFormerName = $this->normalizeTextForMatch((string) $request->input('former_name', ''));
+        $targetRosterGenders = $this->getRosterGenderCandidates($searchGender);
         
         Log::info('参照名簿照合開始', [
             'graduation_term' => $graduationTerm,
             'search_name' => $searchName,
             'search_kana' => $searchKana,
+            'search_gender' => $searchGender,
+            'search_former_name' => $searchFormerName,
         ]);
 
-        // 1. 完全一致チェック（卒業回 + 氏名、スペースを無視して比較）
-        // REPLACE関数でDBのnameカラムからもスペースを除去して比較
-        $exactMatches = ReferenceRoster::where('graduation_term', $graduationTerm)
-            ->whereRaw("REPLACE(REPLACE(REPLACE(name, ' ', ''), '　', ''), '\t', '') = ?", [$searchName])
+        // 1. 完全一致チェック（卒業回 + 氏名 + フリガナ + 性別）
+        // フリガナは参照名簿が半角カナのため、全角カナに正規化して照合
+        $candidateRosters = ReferenceRoster::where('graduation_term', $graduationTerm)
+            ->whereIn('gender', $targetRosterGenders)
             ->get();
+
+        $exactMatches = $candidateRosters->filter(function ($roster) use ($searchName, $searchKana, $searchFormerName) {
+            $rosterName = $this->normalizeTextForMatch($roster->name ?? '');
+            $rosterKana = $this->normalizeKanaForMatch($roster->kana ?? '');
+            $rosterFormerName = $this->normalizeTextForMatch($roster->former_name ?? '');
+
+            $isNameMatch = $rosterName === $searchName;
+            $isKanaMatch = $rosterKana === $searchKana;
+            $isFormerNameMatch = $searchFormerName === '' || $rosterFormerName === $searchFormerName;
+
+            return $isNameMatch && $isKanaMatch && $isFormerNameMatch;
+        })->values();
 
         // 完全一致が1件のみの場合は自動承認
         if ($exactMatches->count() === 1) {
@@ -240,7 +258,7 @@ class RegisterController extends Controller
             ];
         }
 
-        // 複数一致した場合
+        // 複数一致した場合は保留
         if ($exactMatches->count() > 1) {
             Log::warning('参照名簿に複数一致（保留）', [
                 'count' => $exactMatches->count(),
@@ -254,30 +272,12 @@ class RegisterController extends Controller
             ];
         }
 
-        // 2. カナでの一致チェック（カナが入力されている場合）
-        if ($searchKana) {
-            $kanaMatches = ReferenceRoster::where('graduation_term', $graduationTerm)
-                ->whereRaw("REPLACE(REPLACE(REPLACE(kana, ' ', ''), '　', ''), '\t', '') = ?", [$searchKana])
-                ->get();
-            
-            if ($kanaMatches->count() === 1) {
-                Log::info('参照名簿とカナで一致（保留）', [
-                    'matched_id' => $kanaMatches->first()->id,
-                    'matched_name' => $kanaMatches->first()->name,
-                ]);
-                
-                return [
-                    'status' => 'pending', // カナ一致は保留扱い
-                    'match_type' => 'kana',
-                    'matched_roster' => $kanaMatches->first(),
-                ];
-            }
-        }
-
-        // 3. 一致しない場合
+        // 2. 一致しない場合
         Log::warning('参照名簿と一致せず（保留）', [
             'graduation_term' => $graduationTerm,
             'search_name' => $searchName,
+            'search_kana' => $searchKana,
+            'search_gender' => $searchGender,
         ]);
         
         return [
@@ -285,6 +285,41 @@ class RegisterController extends Controller
             'match_type' => 'none',
             'matched_roster' => null,
         ];
+    }
+
+    /**
+     * 照合用テキスト正規化（空白除去）
+     */
+    private function normalizeTextForMatch(string $text): string
+    {
+        return preg_replace('/[\s　]+/u', '', $text) ?? '';
+    }
+
+    /**
+     * 照合用フリガナ正規化
+     * - 空白除去
+     * - 半角カナ → 全角カナ
+     * - ひらがな → カタカナ
+     */
+    private function normalizeKanaForMatch(string $kana): string
+    {
+        $normalized = $this->normalizeTextForMatch($kana);
+        $normalized = mb_convert_kana($normalized, 'KV', 'UTF-8');
+        $normalized = mb_convert_kana($normalized, 'C', 'UTF-8');
+
+        return $normalized;
+    }
+
+    /**
+     * 登録性別に対応する参照名簿側の候補値を返す
+     */
+    private function getRosterGenderCandidates(string $gender): array
+    {
+        return match ($gender) {
+            'male' => ['男', '男性', 'm', 'M', 'male', 'Male', 'MALE'],
+            'female' => ['女', '女性', 'f', 'F', 'female', 'Female', 'FEMALE'],
+            default => ['その他', '不明', 'other', 'Other', 'OTHER', 'o', 'O'],
+        };
     }
     
     /**

@@ -109,6 +109,23 @@
                         @enderror
                     </div>
 
+                    <!-- 性別 -->
+                    <div class="mb-3">
+                        <label for="gender" class="form-label required">性別</label>
+                        <select class="form-select @error('gender') is-invalid @enderror"
+                                id="gender"
+                                name="gender"
+                                required>
+                            <option value="">選択してください</option>
+                            <option value="male" {{ old('gender', $user->gender) === 'male' ? 'selected' : '' }}>男性</option>
+                            <option value="female" {{ old('gender', $user->gender) === 'female' ? 'selected' : '' }}>女性</option>
+                            <option value="other" {{ old('gender', $user->gender) === 'other' ? 'selected' : '' }}>その他</option>
+                        </select>
+                        @error('gender')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <!-- 生年月日 -->
                     <div class="mb-3">
                         <label class="form-label required">生年月日</label>

@@ -21,6 +21,7 @@ class User extends Authenticatable
         'last_name',
         'first_name',
         'former_name',
+        'gender',
         'last_name_kana',
         'first_name_kana',
         'birth_date',
