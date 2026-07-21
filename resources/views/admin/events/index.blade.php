@@ -18,7 +18,8 @@
         </span>
     </div>
     <div class="card-body p-0">
-        <div class="table-responsive">
+        {{-- PC向けテーブル表示 --}}
+        <div class="table-responsive d-none d-md-block">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
@@ -60,7 +61,7 @@
                                     $totalCount = $event->attendances()->count();
                                 @endphp
                                 <small>
-                                    <i class="bi bi-people"></i> 
+                                    <i class="bi bi-people"></i>
                                     出席 <strong>{{ $attendingCount }}</strong> / 回答 {{ $totalCount }}
                                 </small>
                             </td>
@@ -103,38 +104,81 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
-                                イベントがありません。
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                イベントはありません。
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        {{-- スマホ向けカード表示 --}}
+        <div class="d-md-none">
+            @forelse($events as $event)
+                <a href="{{ route('admin.events.edit', $event->id) }}" class="text-decoration-none text-dark">
+                    <div class="border-bottom p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="mb-1 fw-bold">{{ $event->title }}</h6>
+                            @if($event->is_published)
+                                <span class="badge bg-success">公開中</span>
+                            @else
+                                <span class="badge bg-warning text-dark">下書き</span>
+                            @endif
+                        </div>
+                        <div class="small text-muted mb-2">
+                            <i class="bi bi-calendar3"></i>
+                            @if($event->event_date)
+                                {{ $event->event_date->format('Y/m/d H:i') }}
+                            @else
+                                未定
+                            @endif
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge {{ $event->graduation_year ? 'bg-info' : 'bg-primary' }}">
+                                    {{ $event->target_year_display }}
+                                </span>
+                            </div>
+                            <div class="text-muted small">
+                                @php
+                                    $attendingCount = $event->attendances()->where('status', 'attending')->count();
+                                    $totalCount = $event->attendances()->count();
+                                @endphp
+                                <i class="bi bi-people"></i>
+                                {{ $attendingCount }} / {{ $totalCount }}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            @empty
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                    <p class="mt-2">イベントはありません。</p>
+                </div>
+            @endforelse
+        </div>
     </div>
-    
-    @if($events->hasPages())
-        <div class="card-footer d-flex justify-content-center">
-            <nav aria-label="イベント一覧ページネーション">
-                {{ $events->onEachSide(1)->links('pagination::bootstrap-5') }}
-            </nav>
+
+    @if ($events->hasPages())
+        <div class="card-footer">
+            {{ $events->links() }}
         </div>
     @endif
 </div>
 
-<!-- 削除フォーム（非表示） -->
-<form id="deleteForm" method="POST" style="display: none;">
+<form id="delete-form" method="POST" style="display: none;">
     @csrf
     @method('DELETE')
 </form>
-@endsection
 
 @push('scripts')
 <script>
-function deleteEvent(eventId, eventTitle) {
-    if (confirm(`「${eventTitle}」を削除しますか？\n出欠データもすべて削除されます。この操作は取り消せません。`)) {
-        const form = document.getElementById('deleteForm');
-        form.action = `/admin/events/${eventId}`;
+function deleteEvent(id, title) {
+    if (confirm(`「${title}」を削除してもよろしいですか？`)) {
+        const form = document.getElementById('delete-form');
+        form.action = `/admin/events/${id}`;
         form.submit();
     }
 }
