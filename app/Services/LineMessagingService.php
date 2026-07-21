@@ -274,11 +274,15 @@ class LineMessagingService
      */
     private function buildNewsMessage(News $news): array
     {
-        $url  = $this->buildUrl('/news/' . $news->id);
+        $url = $this->buildUrl('/news/' . $news->id);
+        $sender = $news->creator;
+        $senderName = ($sender && $sender->role === 'master_admin') ? '同窓会事務局' : ($sender->full_name ?? '松高.net');
+
         $text = "【松高.net お知らせ】\n\n";
         $text .= "{$news->title}\n\n";
-        $text .= $news->body;
-        $text .= "\n\n詳細はこちら▶︎ {$url}";
+        $text .= mb_strimwidth($news->body, 0, 150, "...") . "\n\n";
+        $text .= "詳細はこちら▶︎ {$url}\n\n";
+        $text .= "送信者：{$senderName}";
 
         return [
             [
@@ -293,8 +297,16 @@ class LineMessagingService
      */
     private function buildEventMessage(Event $event): array
     {
-        $url  = $this->buildUrl('/events/' . $event->id);
-        $text = "【松高.net イベントのお知らせ】\n\n";
+        $url = $this->buildUrl('/events/' . $event->id);
+        $sender = $event->creator;
+        $senderName = ($sender && $sender->role === 'master_admin') ? '同窓会事務局' : ($sender->full_name ?? '松高.net');
+
+        $titlePrefix = "【松高.netからイベントのお知らせ】";
+        if ($sender && $sender->role === 'year_admin' && $event->graduation_year) {
+            $titlePrefix = "【松高.netから{$event->graduation_year}回生イベントのお知らせ】";
+        }
+
+        $text = "{$titlePrefix}\n\n";
         $text .= "📅 {$event->title}\n\n";
 
         if ($event->event_date) {
@@ -309,8 +321,9 @@ class LineMessagingService
             $text .= "締切：" . $event->deadline->format('Y年m月d日') . "\n";
         }
 
-        $text .= "\n{$event->description}\n\n";
-        $text .= "詳細・出欠回答はこちら▶︎ {$url}";
+        $text .= "\n" . mb_strimwidth($event->description, 0, 100, "...") . "\n\n";
+        $text .= "詳細・出欠回答はこちら▶︎ {$url}\n\n";
+        $text .= "送信者：{$senderName}";
 
         return [
             [

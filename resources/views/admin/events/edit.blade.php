@@ -7,8 +7,11 @@
 <div class="row">
     <div class="col-lg-8">
         <div class="card">
-            <div class="card-header">
-                <i class="bi bi-pencil"></i> イベント編集
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-pencil"></i> イベント編集</span>
+                <a href="{{ route('admin.events.show', $event->id) }}" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-list-check"></i> 出欠確認
+                </a>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ route('admin.events.update', $event->id) }}">
