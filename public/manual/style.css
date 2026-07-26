@@ -465,6 +465,35 @@ a {
     color: var(--orange-gold);
 }
 
+.line-share-card {
+    background: var(--card-white);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    box-shadow: 0 20px 45px rgba(30, 75, 39, 0.06);
+    padding: 36px;
+}
+
+.line-share-lead {
+    margin: 0 0 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.line-share-image-wrap {
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid rgba(30, 75, 39, 0.12);
+    box-shadow: 0 18px 36px rgba(18, 51, 26, 0.12);
+    background: #fff;
+}
+
+.line-share-image {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
 .faq-container {
     display: flex;
     flex-direction: column;
@@ -751,6 +780,10 @@ a {
     .white-card {
         padding-top: 36px;
         padding-bottom: 36px;
+    }
+
+    .line-share-card {
+        padding: 24px;
     }
 
     .register-flow {
