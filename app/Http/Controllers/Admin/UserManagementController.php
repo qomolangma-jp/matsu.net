@@ -57,7 +57,7 @@ class UserManagementController extends Controller
               ->orderBy('last_name_kana', 'asc');
 
         // ページネーション
-        $users = $query->paginate(50)->withQueryString();
+        $users = $query->paginate(100)->withQueryString();
 
         // 卒業年度リスト（ドロップダウン用）
         $graduationYears = $this->getGraduationYearsList($user);

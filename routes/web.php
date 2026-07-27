@@ -79,12 +79,80 @@ Route::get('/register/complete', function () {
 })->name('register.complete');
 
 // 自動ログインテスト（開発環境専用）
-Route::get('/test-auto-login', function () {
+Route::get('/test-auto-login', function (\Illuminate\Http\Request $request) {
     if (config('app.env') !== 'local') {
         abort(404);
     }
-    return view('test-auto-login');
+
+    $role = $request->input('role');
+    $graduationYear = $request->input('graduation_year');
+    $keyword = trim((string) $request->input('keyword', ''));
+
+    $users = \App\Models\User::query()
+        ->when($role, fn ($query) => $query->where('role', $role))
+        ->when($graduationYear, fn ($query) => $query->where('graduation_year', $graduationYear))
+        ->when($keyword !== '', function ($query) use ($keyword) {
+            $query->where(function ($inner) use ($keyword) {
+                $inner->where('last_name', 'like', "%{$keyword}%")
+                    ->orWhere('first_name', 'like', "%{$keyword}%")
+                    ->orWhere('last_name_kana', 'like', "%{$keyword}%")
+                    ->orWhere('first_name_kana', 'like', "%{$keyword}%")
+                    ->orWhere('email', 'like', "%{$keyword}%")
+                    ->orWhere('line_id', 'like', "%{$keyword}%");
+            });
+        })
+        ->orderByRaw("FIELD(role, 'master_admin', 'year_admin', 'general')")
+        ->orderBy('graduation_year', 'desc')
+        ->orderBy('id')
+        ->limit(200)
+        ->get();
+
+    $graduationYears = \App\Models\User::query()
+        ->select('graduation_year')
+        ->whereNotNull('graduation_year')
+        ->distinct()
+        ->orderBy('graduation_year', 'desc')
+        ->pluck('graduation_year');
+
+    return view('test-auto-login', compact('users', 'graduationYears', 'role', 'graduationYear', 'keyword'));
 })->name('test.auto.login');
+
+Route::post('/test-auto-login', function (\Illuminate\Http\Request $request) {
+    if (config('app.env') !== 'local') {
+        abort(404);
+    }
+
+    $validated = $request->validate([
+        'user_id' => ['required', 'integer', 'exists:users,id'],
+        'redirect_to' => ['nullable', 'string'],
+    ]);
+
+    $user = \App\Models\User::findOrFail($validated['user_id']);
+
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    Auth::login($user);
+    $request->session()->regenerate();
+
+    $redirectTo = $validated['redirect_to'] ?? '';
+    $allowedRedirects = [
+        'mypage' => route('mypage.index'),
+        'news' => route('news.index'),
+        'events' => route('events.index'),
+        'admin_users' => route('admin.users.index'),
+        'admin_news' => route('admin.news.index'),
+        'admin_events' => route('admin.events.index'),
+    ];
+
+    $defaultRoute = in_array($user->role, ['master_admin', 'year_admin'], true)
+        ? route('admin.users.index')
+        : route('mypage.index');
+
+    return redirect($allowedRedirects[$redirectTo] ?? $defaultRoute)
+        ->with('success', "ローカルテストで {$user->full_name} さんとしてログインしました。");
+})->name('test.auto.login.submit');
 
 Route::post('/logout', function (\Illuminate\Http\Request $request) {
     Auth::logout();

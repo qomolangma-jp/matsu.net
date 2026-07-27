@@ -28,6 +28,18 @@
                 </div>
             @endif
 
+            @if (app()->environment('local'))
+                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-semibold">ローカル検証用ショートカット</div>
+                        <div class="small mb-0">複数ユーザーの切替テストは専用ページから行えます。</div>
+                    </div>
+                    <a href="{{ route('test.auto.login') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-people"></i> 切替ページ
+                    </a>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('admin.login') }}">
                 @csrf
 

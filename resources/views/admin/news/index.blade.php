@@ -53,6 +53,9 @@
                             </td>
                             <td>
                                 <span class="badge bg-info">{{ $item->target_years_display }}</span>
+                                @if(in_array('year_admin', $item->target_roles ?? [], true))
+                                    <span class="badge bg-dark mt-1">学年管理者のみ</span>
+                                @endif
                             </td>
                             <td>
                                 @if($item->line_sent_count > 0)

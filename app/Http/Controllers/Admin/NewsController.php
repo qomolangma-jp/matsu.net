@@ -42,7 +42,7 @@ class NewsController extends Controller
             $query->where(function($q) use ($user) {
                 $q->whereNull('target_graduation_years')
                   ->orWhereJsonContains('target_graduation_years', $user->graduation_year);
-            });
+            })->forRole($user->role);
         }
 
         $news = $query->paginate(20);
@@ -86,6 +86,8 @@ class NewsController extends Controller
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:5120',
             'target_graduation_years' => 'nullable|array',
             'target_graduation_years.*' => 'integer|min:1948',
+            'target_roles' => 'nullable|array',
+            'target_roles.*' => 'in:year_admin',
             'is_line_notification' => 'boolean',
             'is_top_display' => 'boolean',
             'publish_now' => 'boolean',
@@ -95,7 +97,12 @@ class NewsController extends Controller
         try {
             // 学年管理者の場合、自学年のみ指定可能
             $targetYears = $request->input('target_graduation_years', []);
+            $targetRoles = $request->input('target_roles', []);
             if ($user->role === 'year_admin') {
+                if (!empty($targetRoles)) {
+                    return back()->withErrors(['target_roles' => '学年管理者限定配信の作成はマスター管理者のみ可能です。'])->withInput();
+                }
+
                 // 自学年以外が含まれていないかチェック
                 foreach ($targetYears as $year) {
                     if ($year != $user->graduation_year) {
@@ -114,6 +121,7 @@ class NewsController extends Controller
                 'body' => $validated['body'],
                 'image_path' => $request->file('image')?->store('news-images', 'public'),
                 'target_graduation_years' => !empty($targetYears) ? $targetYears : null,
+                'target_roles' => !empty($targetRoles) ? array_values($targetRoles) : null,
                 'is_line_notification' => $request->boolean('is_line_notification'),
                 'is_top_display' => $request->boolean('is_top_display'),
                 'published_at' => $request->boolean('publish_now') ? now() : null,
@@ -174,6 +182,9 @@ class NewsController extends Controller
         // LINE送信統計
         $lineSentCount = $news->lineNotificationLogs()->distinct('user_id')->count('user_id');
         $targetUsersQuery = User::approved()->whereNotNull('line_id');
+        if (!empty($news->target_roles)) {
+            $targetUsersQuery->whereIn('role', $news->target_roles);
+        }
         if (!empty($news->target_graduation_years)) {
             $targetUsersQuery->whereIn('graduation_year', $news->target_graduation_years);
         }
@@ -207,6 +218,8 @@ class NewsController extends Controller
             'remove_image'             => 'nullable|boolean',
             'target_graduation_years'  => 'nullable|array',
             'target_graduation_years.*'=> 'integer|min:1948',
+            'target_roles'             => 'nullable|array',
+            'target_roles.*'           => 'in:year_admin',
             'is_top_display'           => 'boolean',
             'send_line_to_unsent'      => 'nullable|boolean',
             'send_line_resend_all'     => 'nullable|boolean',
@@ -215,7 +228,12 @@ class NewsController extends Controller
         DB::beginTransaction();
         try {
             $targetYears = $request->input('target_graduation_years', []);
+            $targetRoles = $request->input('target_roles', []);
             if ($user->role === 'year_admin') {
+                if (!empty($targetRoles)) {
+                    return back()->withErrors(['target_roles' => '学年管理者限定配信の設定変更はマスター管理者のみ可能です。'])->withInput();
+                }
+
                 foreach ($targetYears as $year) {
                     if ($year != $user->graduation_year) {
                         return back()->withErrors(['target_graduation_years' => '自学年以外は選択できません。'])->withInput();
@@ -247,6 +265,7 @@ class NewsController extends Controller
                 'body'                   => $validated['body'],
                 'image_path'             => $imagePath,
                 'target_graduation_years'=> !empty($targetYears) ? $targetYears : null,
+                'target_roles'           => !empty($targetRoles) ? array_values($targetRoles) : null,
                 'is_top_display'         => $request->boolean('is_top_display'),
             ]);
 

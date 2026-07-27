@@ -36,6 +36,10 @@ class LineMessagingService
         // 対象ユーザーのベースクエリ（承認済み・LINE ID あり）
         $usersQuery = User::approved()->whereNotNull('line_id');
 
+        if (!empty($notifiable->target_roles)) {
+            $usersQuery->whereIn('role', $notifiable->target_roles);
+        }
+
         if ($notifiable instanceof News && !empty($notifiable->target_graduation_years)) {
             $usersQuery->whereIn('graduation_year', $notifiable->target_graduation_years);
         } elseif ($notifiable instanceof Event && $notifiable->graduation_year) {

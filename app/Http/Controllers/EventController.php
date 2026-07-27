@@ -34,7 +34,8 @@ class EventController extends Controller
             ->where(function ($q) use ($user) {
                 $q->whereNull('graduation_year')
                   ->orWhere('graduation_year', $user->graduation_year);
-            });
+            })
+            ->forRole($user->role);
 
         // 期間フィルタ
         $filter = $request->input('filter', 'upcoming');
@@ -80,6 +81,12 @@ class EventController extends Controller
             abort(403, 'このイベントは対象外です。');
         }
 
+        if (!empty($event->target_roles)
+            && !in_array($user->role, $event->target_roles, true)
+        ) {
+            abort(403, 'このイベントは対象外です。');
+        }
+
         $attendance = Attendance::where('event_id', $event->id)
             ->where('user_id', $user->id)
             ->first();
@@ -107,6 +114,12 @@ class EventController extends Controller
         }
 
         if ($event->graduation_year && $event->graduation_year != $user->graduation_year) {
+            abort(403);
+        }
+
+        if (!empty($event->target_roles)
+            && !in_array($user->role, $event->target_roles, true)
+        ) {
             abort(403);
         }
 

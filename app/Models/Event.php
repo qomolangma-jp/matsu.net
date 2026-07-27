@@ -19,6 +19,7 @@ class Event extends Model
         'deadline',
         'capacity',
         'graduation_year',
+        'target_roles',
         'created_by',
         'is_published',
     ];
@@ -28,6 +29,7 @@ class Event extends Model
         'deadline' => 'datetime',
         'capacity' => 'integer',
         'graduation_year' => 'integer',
+        'target_roles' => 'array',
         'is_published' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -89,6 +91,14 @@ class Event extends Model
         return $query->where('graduation_year', $graduationYear);
     }
 
+    public function scopeForRole($query, string $role)
+    {
+        return $query->where(function ($q) use ($role) {
+            $q->whereNull('target_roles')
+              ->orWhereJsonContains('target_roles', $role);
+        });
+    }
+
     public function scopeFilterByPermission($query, User $user)
     {
         if ($user->role === 'master_admin') {
@@ -99,13 +109,13 @@ class Event extends Model
             return $query->where(function($q) use ($user) {
                 $q->whereNull('graduation_year')
                   ->orWhere('graduation_year', $user->graduation_year);
-            });
+            })->forRole($user->role);
         }
 
         return $query->where(function($q) use ($user) {
             $q->whereNull('graduation_year')
               ->orWhere('graduation_year', $user->graduation_year);
-        })->published();
+        })->forRole($user->role)->published();
     }
 
     public function getAttendingCountAttribute()
@@ -149,5 +159,14 @@ class Event extends Model
         }
 
         return "{$this->graduation_year}年（" . ($this->graduation_year - 1947) . "回期）";
+    }
+
+    public function getTargetRoleDisplayAttribute(): string
+    {
+        if (in_array('year_admin', $this->target_roles ?? [], true)) {
+            return '学年管理者のみ';
+        }
+
+        return '全権限';
     }
 }

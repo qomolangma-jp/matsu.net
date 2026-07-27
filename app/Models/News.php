@@ -16,6 +16,7 @@ class News extends Model
         'body',
         'image_path',
         'target_graduation_years',
+        'target_roles',
         'is_line_notification',
         'is_top_display',
         'published_at',
@@ -24,6 +25,7 @@ class News extends Model
 
     protected $casts = [
         'target_graduation_years' => 'array',
+        'target_roles' => 'array',
         'is_line_notification' => 'boolean',
         'is_top_display' => 'boolean',
         'published_at' => 'datetime',
@@ -79,6 +81,14 @@ class News extends Model
         });
     }
 
+    public function scopeForRole($query, string $role)
+    {
+        return $query->where(function ($q) use ($role) {
+            $q->whereNull('target_roles')
+              ->orWhereJsonContains('target_roles', $role);
+        });
+    }
+
     /**
      * 対象卒業年度の表示文字列
      */
@@ -94,5 +104,14 @@ class News extends Model
             ->join('、');
 
         return $years;
+    }
+
+    public function getTargetRoleDisplayAttribute(): string
+    {
+        if (in_array('year_admin', $this->target_roles ?? [], true)) {
+            return '学年管理者のみ';
+        }
+
+        return '全権限';
     }
 }

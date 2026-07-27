@@ -25,11 +25,12 @@ class DashboardController extends Controller
         // マスター管理者以外は自学年データのみ
         if ($admin->role !== 'master_admin') {
             $userQuery->where('graduation_year', $admin->graduation_year);
-            $eventQuery->where('graduation_year', $admin->graduation_year);
+            $eventQuery->where('graduation_year', $admin->graduation_year)
+                ->forRole($admin->role);
             $newsQuery->where(function ($q) use ($admin) {
                 $q->whereJsonContains('target_graduation_years', (string) $admin->graduation_year)
                   ->orWhereJsonContains('target_graduation_years', (int) $admin->graduation_year);
-            });
+            })->forRole($admin->role);
         }
 
         // 最新登録ユーザー5名

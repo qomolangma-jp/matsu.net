@@ -34,6 +34,7 @@ class NewsController extends Controller
                 $q->whereNull('target_graduation_years')
                   ->orWhereJsonContains('target_graduation_years', (string) $user->graduation_year);
             })
+            ->forRole($user->role)
             ->orderByDesc('published_at');
 
         // キーワード検索
@@ -73,6 +74,12 @@ class NewsController extends Controller
         // 対象卒業年度チェック
         if (!empty($news->target_graduation_years)
             && !in_array((string) $user->graduation_year, array_map('strval', $news->target_graduation_years))
+        ) {
+            abort(403, 'このお知らせは対象外です。');
+        }
+
+        if (!empty($news->target_roles)
+            && !in_array($user->role, $news->target_roles, true)
         ) {
             abort(403, 'このお知らせは対象外です。');
         }

@@ -54,6 +54,9 @@
                                 <span class="badge {{ $event->graduation_year ? 'bg-info' : 'bg-primary' }}">
                                     {{ $event->target_year_display }}
                                 </span>
+                                @if(in_array('year_admin', $event->target_roles ?? [], true))
+                                    <div><span class="badge bg-dark mt-1">学年管理者のみ</span></div>
+                                @endif
                             </td>
                             <td>
                                 @php
@@ -140,6 +143,9 @@
                                 <span class="badge {{ $event->graduation_year ? 'bg-info' : 'bg-primary' }}">
                                     {{ $event->target_year_display }}
                                 </span>
+                                @if(in_array('year_admin', $event->target_roles ?? [], true))
+                                    <div class="mt-1"><span class="badge bg-dark">学年管理者のみ</span></div>
+                                @endif
                             </div>
                             <div class="text-muted small">
                                 @php

@@ -125,6 +125,29 @@
                         </div>
                     </div>
 
+                    @if(Auth::user()->role === 'master_admin')
+                        <div class="mb-3">
+                            <label class="form-label">送信対象の権限</label>
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="target_roles[]"
+                                       value="year_admin"
+                                       id="target_role_year_admin"
+                                       {{ (is_array(old('target_roles')) && in_array('year_admin', old('target_roles'))) || (is_array($event->target_roles) && in_array('year_admin', $event->target_roles)) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="target_role_year_admin">
+                                    学年管理者のみに送信・表示する
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                未選択の場合は通常どおり対象学年の一般ユーザーにも表示されます
+                            </div>
+                            @error('target_roles')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endif
+
                     <!-- LINE通知セクション -->
                     <div class="mb-4 p-3 rounded border border-success bg-light">
                         <h6 class="mb-3"><i class="bi bi-line text-success"></i> LINE通知</h6>

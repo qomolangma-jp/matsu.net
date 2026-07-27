@@ -87,6 +87,8 @@ class EventController extends Controller
             'deadline' => 'nullable|date|before:event_date',
             'capacity' => 'nullable|integer|min:1',
             'graduation_year' => 'nullable|integer|min:1948',
+            'target_roles' => 'nullable|array',
+            'target_roles.*' => 'in:year_admin',
             'is_published' => 'boolean',
             'send_line_notification' => 'boolean',
         ]);
@@ -95,7 +97,12 @@ class EventController extends Controller
         try {
             // 学年管理者は自学年のイベントのみ作成可能
             $targetYear = $request->input('graduation_year');
+            $targetRoles = $request->input('target_roles', []);
             if ($user->role === 'year_admin') {
+                if (!empty($targetRoles)) {
+                    return back()->withErrors(['target_roles' => '学年管理者限定配信の作成はマスター管理者のみ可能です。'])->withInput();
+                }
+
                 if ($targetYear && $targetYear != $user->graduation_year) {
                     return back()->withErrors(['graduation_year' => '自学年以外は選択できません。'])->withInput();
                 }
@@ -111,6 +118,7 @@ class EventController extends Controller
                 'deadline' => $validated['deadline'],
                 'capacity' => $validated['capacity'],
                 'graduation_year' => $targetYear,
+                'target_roles' => !empty($targetRoles) ? array_values($targetRoles) : null,
                 'is_published' => $request->boolean('is_published'),
                 'created_by' => $user->id,
             ]);
@@ -160,9 +168,7 @@ class EventController extends Controller
         }
 
         // 学年管理者は自学年のイベントのみ閲覧可能
-        if ($user->role === 'year_admin' && $event->graduation_year != $user->graduation_year) {
-            abort(403, '他学年のイベントは閲覧できません。');
-        }
+        $this->ensureEventManageableByAdmin($user, $event, '閲覧');
 
         // 出欠状況
         $attendances = Attendance::where('event_id', $event->id)
@@ -177,6 +183,9 @@ class EventController extends Controller
 
         // 対象ユーザー数を取得
         $targetUsersQuery = User::approved();
+        if (!empty($event->target_roles)) {
+            $targetUsersQuery->whereIn('role', $event->target_roles);
+        }
         if ($event->graduation_year) {
             $targetUsersQuery->where('graduation_year', $event->graduation_year);
         }
@@ -231,6 +240,9 @@ class EventController extends Controller
         // LINE送信統計
         $lineSentCount   = $event->lineNotificationLogs()->distinct('user_id')->count('user_id');
         $targetUsersQuery = User::approved()->whereNotNull('line_id');
+        if (!empty($event->target_roles)) {
+            $targetUsersQuery->whereIn('role', $event->target_roles);
+        }
         if ($event->graduation_year) {
             $targetUsersQuery->where('graduation_year', $event->graduation_year);
         }
@@ -253,9 +265,7 @@ class EventController extends Controller
         }
 
         // 学年管理者は自学年のイベントのみ更新可能
-        if ($user->role === 'year_admin' && $event->graduation_year != $user->graduation_year) {
-            abort(403, '他学年のイベントは更新できません。');
-        }
+        $this->ensureEventManageableByAdmin($user, $event, '更新');
 
         $validated = $request->validate([
             'title'                => 'required|string|max:255',
@@ -264,6 +274,8 @@ class EventController extends Controller
             'location'             => 'nullable|string|max:255',
             'deadline'             => 'nullable|date|before:event_date',
             'capacity'             => 'nullable|integer|min:1',
+            'target_roles'         => 'nullable|array',
+            'target_roles.*'       => 'in:year_admin',
             'is_published'         => 'boolean',
             'send_line_to_unsent'  => 'nullable|boolean',
             'send_line_resend_all' => 'nullable|boolean',
@@ -271,6 +283,11 @@ class EventController extends Controller
 
         DB::beginTransaction();
         try {
+            $targetRoles = $request->input('target_roles', []);
+            if ($user->role === 'year_admin' && !empty($targetRoles)) {
+                return back()->withErrors(['target_roles' => '学年管理者限定配信の設定変更はマスター管理者のみ可能です。'])->withInput();
+            }
+
             $event->update([
                 'title'       => $validated['title'],
                 'description' => $validated['description'],
@@ -278,6 +295,7 @@ class EventController extends Controller
                 'location'    => $validated['location'],
                 'deadline'    => $validated['deadline'],
                 'capacity'    => $validated['capacity'],
+                'target_roles'=> !empty($targetRoles) ? array_values($targetRoles) : null,
                 'is_published'=> $request->boolean('is_published'),
             ]);
 
@@ -324,9 +342,7 @@ class EventController extends Controller
         }
 
         // 学年管理者は自学年のイベントのみ削除可能
-        if ($user->role === 'year_admin' && $event->graduation_year != $user->graduation_year) {
-            abort(403, '他学年のイベントは削除できません。');
-        }
+        $this->ensureEventManageableByAdmin($user, $event, '削除');
 
         try {
             $event->delete();
@@ -358,9 +374,7 @@ class EventController extends Controller
         }
 
         // 学年管理者は自学年のイベントのみエクスポート可能
-        if ($user->role === 'year_admin' && $event->graduation_year != $user->graduation_year) {
-            abort(403, '他学年のイベントはエクスポートできません。');
-        }
+        $this->ensureEventManageableByAdmin($user, $event, 'エクスポート');
 
         $attendances = Attendance::where('event_id', $event->id)
             ->with('user')
@@ -419,6 +433,21 @@ class EventController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    private function ensureEventManageableByAdmin(User $user, Event $event, string $action): void
+    {
+        if ($user->role === 'master_admin') {
+            return;
+        }
+
+        if (!empty($event->target_roles) && in_array('year_admin', $event->target_roles, true)) {
+            abort(403, "学年管理者限定のイベントはマスター管理者のみ{$action}できます。");
+        }
+
+        if ($event->graduation_year != $user->graduation_year) {
+            abort(403, "他学年のイベントは{$action}できません。");
+        }
     }
 
     /**
