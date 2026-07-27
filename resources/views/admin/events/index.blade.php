@@ -18,18 +18,17 @@
         </span>
     </div>
     <div class="card-body p-0">
-        {{-- PC向けテーブル表示 --}}
-        <div class="table-responsive d-none d-md-block">
+        <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>ID</th>
-                        <th>タイトル</th>
-                        <th>開催日時</th>
-                        <th>対象学年</th>
-                        <th>出欠状況</th>
-                        <th>LINE送信</th>
-                        <th>公開</th>
+                        <th style="width: 60px;">ID</th>
+                        <th style="min-width: 220px;">タイトル</th>
+                        <th style="width: 140px;">開催日時</th>
+                        <th style="width: 150px;">対象学年</th>
+                        <th style="width: 150px;">出欠状況</th>
+                        <th style="width: 110px;">LINE送信</th>
+                        <th style="width: 90px;">公開</th>
                         <th style="width: 180px;">操作</th>
                     </tr>
                 </thead>
@@ -116,55 +115,6 @@
                 </tbody>
             </table>
         </div>
-
-        {{-- スマホ向けカード表示 --}}
-        <div class="d-md-none">
-            @forelse($events as $event)
-                <a href="{{ route('admin.events.edit', $event->id) }}" class="text-decoration-none text-dark">
-                    <div class="border-bottom p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <h6 class="mb-1 fw-bold">{{ $event->title }}</h6>
-                            @if($event->is_published)
-                                <span class="badge bg-success">公開中</span>
-                            @else
-                                <span class="badge bg-warning text-dark">下書き</span>
-                            @endif
-                        </div>
-                        <div class="small text-muted mb-2">
-                            <i class="bi bi-calendar3"></i>
-                            @if($event->event_date)
-                                {{ $event->event_date->format('Y/m/d H:i') }}
-                            @else
-                                未定
-                            @endif
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge {{ $event->graduation_year ? 'bg-info' : 'bg-primary' }}">
-                                    {{ $event->target_year_display }}
-                                </span>
-                                @if(in_array('year_admin', $event->target_roles ?? [], true))
-                                    <div class="mt-1"><span class="badge bg-dark">学年管理者のみ</span></div>
-                                @endif
-                            </div>
-                            <div class="text-muted small">
-                                @php
-                                    $attendingCount = $event->attendances()->where('status', 'attending')->count();
-                                    $totalCount = $event->attendances()->count();
-                                @endphp
-                                <i class="bi bi-people"></i>
-                                {{ $attendingCount }} / {{ $totalCount }}
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            @empty
-                <div class="text-center py-5">
-                    <i class="bi bi-inbox fs-1 text-muted"></i>
-                    <p class="mt-2">イベントはありません。</p>
-                </div>
-            @endforelse
-        </div>
     </div>
 
     @if ($events->hasPages())
@@ -178,6 +128,8 @@
     @csrf
     @method('DELETE')
 </form>
+
+@endsection
 
 @push('scripts')
 <script>

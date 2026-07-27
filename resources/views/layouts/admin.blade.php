@@ -74,6 +74,70 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
+        .top-bar-main {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .top-bar-title-group {
+            min-width: 0;
+            flex-wrap: nowrap;
+        }
+
+        .top-bar-inline-stats {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+            min-width: 0;
+            padding-bottom: 2px;
+        }
+
+        .top-bar-inline-stats::-webkit-scrollbar {
+            display: none;
+        }
+
+        .top-bar-inline-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: fit-content;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #f6f8f9;
+            border: 1px solid #e7ecef;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        .top-bar-inline-stat-label {
+            font-size: 0.72rem;
+            color: #5f6b76;
+        }
+
+        .top-bar-inline-stat-value {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .top-bar-inline-stat.is-approved {
+            background: #eef9f2;
+            border-color: #cae9d5;
+        }
+
+        .top-bar-inline-stat.is-pending {
+            background: #fff7e8;
+            border-color: #f6ddb1;
+        }
+
+        .top-bar-inline-stat.is-unreachable {
+            background: #fff0f1;
+            border-color: #f4c9ce;
+        }
+
         .card {
             border: none;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -152,6 +216,9 @@
                 padding: 10px 12px;
                 margin-bottom: 12px;
                 border-radius: 6px;
+            }
+            .top-bar-inline-stats {
+                display: none;
             }
             .stats-card {
                 height: 56px;
@@ -263,8 +330,8 @@
     <!-- メインコンテンツ -->
     <div class="main-content">
         <!-- トップバー -->
-        <div class="top-bar d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
+        <div class="top-bar d-flex justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3 top-bar-main">
                 {{-- スマホのみハンバーガー --}}
                 <button class="btn btn-sm d-lg-none"
                         style="color: var(--primary-color); border-color: var(--primary-color);"
@@ -274,9 +341,12 @@
                         aria-controls="adminOffcanvas">
                     <i class="bi bi-list fs-5"></i>
                 </button>
-                <h5 class="mb-0">@yield('page-title', 'ページタイトル')</h5>
+                <div class="d-flex align-items-center gap-3 top-bar-title-group">
+                    <h5 class="mb-0 flex-shrink-0">@yield('page-title', 'ページタイトル')</h5>
+                    @yield('top-summary')
+                </div>
             </div>
-            <div>
+            <div class="flex-shrink-0">
                 @yield('top-actions')
             </div>
         </div>

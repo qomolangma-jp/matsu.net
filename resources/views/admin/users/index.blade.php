@@ -9,35 +9,28 @@
     </a>
 @endsection
 
-@section('content')
-<!-- 統計情報 -->
-<div class="row g-2 mb-3 stats-summary">
-    <div class="col-6 col-md-3">
-        <div class="stats-card">
-            <small>総登録者数</small>
-            <h3>{{ number_format($stats['total']) }}</h3>
+@section('top-summary')
+    <div class="top-bar-inline-stats" aria-label="統計情報">
+        <div class="top-bar-inline-stat">
+            <span class="top-bar-inline-stat-label">総登録者数</span>
+            <span class="top-bar-inline-stat-value">{{ number_format($stats['total']) }}</span>
+        </div>
+        <div class="top-bar-inline-stat is-approved">
+            <span class="top-bar-inline-stat-label">承認済み</span>
+            <span class="top-bar-inline-stat-value">{{ number_format($stats['approved']) }}</span>
+        </div>
+        <div class="top-bar-inline-stat is-pending">
+            <span class="top-bar-inline-stat-label">承認待ち</span>
+            <span class="top-bar-inline-stat-value">{{ number_format($stats['pending']) }}</span>
+        </div>
+        <div class="top-bar-inline-stat is-unreachable">
+            <span class="top-bar-inline-stat-label">郵送物不達</span>
+            <span class="top-bar-inline-stat-value">{{ number_format($stats['mail_unreachable']) }}</span>
         </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="stats-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
-            <small>承認済み</small>
-            <h3>{{ number_format($stats['approved']) }}</h3>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="stats-card" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
-            <small>承認待ち</small>
-            <h3>{{ number_format($stats['pending']) }}</h3>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="stats-card" style="background: linear-gradient(135deg, #dc3545, #c82333);">
-            <small>郵送物不達</small>
-            <h3>{{ number_format($stats['mail_unreachable']) }}</h3>
-        </div>
-    </div>
-</div>
+@endsection
 
+@section('content')
 <!-- 検索フィルター -->
 <div class="card mb-3">
     <div class="card-header">
@@ -46,7 +39,7 @@
     <div class="card-body">
         <form method="GET" action="{{ route('admin.users.index') }}" id="filterForm">
             <div class="row g-2">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-2">
                     <input type="text" class="form-control form-control-sm" name="search"
                            value="{{ $filters['search'] }}" placeholder="氏名・カナ">
                 </div>
