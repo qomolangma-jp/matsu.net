@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\PasswordReissueController;
 
 /*
 |--------------------------------------------------------------------------
@@ -160,6 +161,12 @@ Route::post('/logout', function (\Illuminate\Http\Request $request) {
     $request->session()->regenerateToken();
     return redirect()->route('admin.login.form');
 })->name('logout');
+
+// パスワード再発行（メールアドレス + 生年月日で照合）
+Route::get('/password/reissue', [PasswordReissueController::class, 'showForm'])->name('password.reissue.form');
+Route::post('/password/reissue', [PasswordReissueController::class, 'reissue'])
+    ->middleware('throttle:5,1')
+    ->name('password.reissue.send');
 
 // マイページ（全ユーザーアクセス可）
 Route::middleware(['auth'])->prefix('mypage')->name('mypage.')->group(function () {

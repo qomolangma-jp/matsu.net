@@ -23,6 +23,12 @@
                     </div>
                 @endif
 
+                <div class="alert alert-secondary" role="alert" style="max-width: 480px;">
+                    <div class="fw-semibold mb-1"><i class="bi bi-info-circle me-1"></i>現在のパスワードが不明な場合</div>
+                    <a href="{{ route('password.reissue.form') }}" class="alert-link">パスワード再発行ページ</a>から、
+                    メールアドレスと生年月日で再発行できます。
+                </div>
+
                 <form action="{{ route('mypage.password.update') }}" method="POST" style="max-width: 480px;">
                     @csrf
                     @method('PUT')

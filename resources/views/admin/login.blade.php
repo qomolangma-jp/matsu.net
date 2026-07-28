@@ -85,6 +85,12 @@
                         <i class="bi bi-box-arrow-in-right me-1"></i> ログイン
                     </button>
                 </div>
+
+                <div class="text-center mt-3">
+                    <a href="{{ route('password.reissue.form') }}" class="small text-decoration-none">
+                        <i class="bi bi-life-preserver me-1"></i>パスワードを再発行する
+                    </a>
+                </div>
             </form>
         </div>
         <div class="card-footer text-center text-muted small py-3">
