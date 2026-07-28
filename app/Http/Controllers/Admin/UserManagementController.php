@@ -534,6 +534,7 @@ class UserManagementController extends Controller
 
         $processed = 0;
         $skippedSelfDelete = 0;
+        $autoApproved = 0;
 
         DB::beginTransaction();
         try {
@@ -571,9 +572,27 @@ class UserManagementController extends Controller
                 $newRole = $validated['bulk_action'] === 'set_role_year_admin' ? 'year_admin' : 'general';
 
                 foreach ($targetUsers as $user) {
-                    $user->update([
+                    $updateData = [
                         'role' => $newRole,
-                    ]);
+                    ];
+
+                    // 学年管理者への昇格時は、未承認ユーザーを同時に承認済みにする。
+                    if ($newRole === 'year_admin' && $user->approval_status !== 'approved') {
+                        $updateData['approval_status'] = 'approved';
+                        $updateData['approved_at'] = now();
+                        $updateData['approved_by'] = $admin->id;
+                        $updateData['approval_note'] = '管理者による一括権限変更に伴う自動承認';
+
+                        $userFullName = str_replace([' ', '　'], '', $user->last_name . $user->first_name);
+                        DB::table('reference_rosters')
+                            ->whereRaw("REPLACE(REPLACE(name, ' ', ''), '　', '') = ?", [$userFullName])
+                            ->where('graduation_term', 'LIKE', '%高校' . ($user->graduation_year - 1947) . '回期%')
+                            ->update(['is_registered' => true]);
+
+                        $autoApproved++;
+                    }
+
+                    $user->update($updateData);
                     $processed++;
                 }
 
@@ -582,14 +601,19 @@ class UserManagementController extends Controller
                 Log::info('Bulk user role update completed', [
                     'updated_count' => $processed,
                     'new_role' => $newRole,
+                    'auto_approved_count' => $autoApproved,
                     'admin_id' => $admin->id,
                 ]);
 
                 $roleLabel = $newRole === 'year_admin' ? '学年管理者' : '一般ユーザー';
+                $message = "{$processed}名の権限を{$roleLabel}に変更しました。";
+                if ($newRole === 'year_admin' && $autoApproved > 0) {
+                    $message .= " うち{$autoApproved}名は未承認から承認済みに更新しました。";
+                }
 
                 return redirect()
                     ->route('admin.users.index')
-                    ->with('success', "{$processed}名の権限を{$roleLabel}に変更しました。");
+                    ->with('success', $message);
             }
 
             foreach ($targetUsers as $user) {
