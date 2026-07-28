@@ -270,11 +270,7 @@
 const bulkActionForm = document.getElementById('bulkActionForm');
 const bulkActionSelect = document.getElementById('bulkActionSelect');
 const selectAllUsers = document.getElementById('selectAllUsers');
-
-function getCookieValue(name) {
-    const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
-    return match ? decodeURIComponent(match[1]) : null;
-}
+let isBulkActionSubmitting = false;
 
 if (selectAllUsers) {
     selectAllUsers.addEventListener('change', function () {
@@ -296,15 +292,13 @@ document.querySelectorAll('.row-user-checkbox').forEach((checkbox) => {
 });
 
 if (bulkActionForm) {
-    bulkActionForm.addEventListener('submit', function (event) {
+    bulkActionForm.addEventListener('submit', async function (event) {
+        if (isBulkActionSubmitting) {
+            return;
+        }
+
         const selectedUsers = document.querySelectorAll('.row-user-checkbox:not(:disabled):checked');
         const tokenInput = bulkActionForm.querySelector('input[name="_token"]');
-        const cookieToken = getCookieValue('XSRF-TOKEN');
-
-        // Keep CSRF token aligned with latest session cookie to avoid stale-token 419.
-        if (tokenInput && cookieToken) {
-            tokenInput.value = cookieToken;
-        }
 
         if (!bulkActionSelect.value) {
             event.preventDefault();
@@ -334,7 +328,32 @@ if (bulkActionForm) {
 
         if (!confirm(message)) {
             event.preventDefault();
+            return;
         }
+
+        event.preventDefault();
+
+        try {
+            const response = await fetch("{{ route('admin.csrf-token') }}", {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.ok && tokenInput) {
+                const payload = await response.json();
+                if (payload && payload.token) {
+                    tokenInput.value = payload.token;
+                }
+            }
+        } catch (e) {
+            // If token refresh fails, continue with current token.
+        }
+
+        isBulkActionSubmitting = true;
+        bulkActionForm.submit();
     });
 }
 

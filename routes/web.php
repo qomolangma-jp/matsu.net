@@ -194,6 +194,9 @@ Route::middleware(['auth', 'approved'])->prefix('events')->name('events.')->grou
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     // ダッシュボード
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/csrf-token', function () {
+        return response()->json(['token' => csrf_token()]);
+    })->name('csrf-token');
 
     // 名簿管理
     Route::prefix('users')->name('users.')->group(function () {
