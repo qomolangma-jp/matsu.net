@@ -498,8 +498,12 @@ class UserManagementController extends Controller
             abort(403, '管理者権限が必要です。');
         }
 
+        $allowedActions = $admin->role === 'master_admin'
+            ? 'approve,delete,set_role_year_admin,set_role_general'
+            : 'approve,delete';
+
         $validated = $request->validate([
-            'bulk_action' => 'required|in:approve,delete,set_role_year_admin,set_role_general',
+            'bulk_action' => 'required|in:' . $allowedActions,
             'selected_user_ids' => 'required|array|min:1',
             'selected_user_ids.*' => 'integer|exists:users,id',
         ]);

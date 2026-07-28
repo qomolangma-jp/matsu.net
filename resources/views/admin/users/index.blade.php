@@ -102,6 +102,9 @@
 <!-- 名簿一覧 -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
+        @php
+            $isYearAdmin = Auth::user()->role === 'year_admin';
+        @endphp
         <span>
             <i class="bi bi-list-ul"></i> 名簿一覧
             <span class="badge bg-secondary ms-2">{{ $users->total() }}件</span>
@@ -111,8 +114,10 @@
             <select name="bulk_action" id="bulkActionSelect" class="form-select form-select-sm" style="width: 180px;">
                 <option value="">一括操作を選択</option>
                 <option value="approve">承認済みに変更</option>
-                <option value="set_role_year_admin">権限を学年管理者へ変更</option>
-                <option value="set_role_general">権限を一般ユーザーへ変更</option>
+                @if(!$isYearAdmin)
+                    <option value="set_role_year_admin">権限を学年管理者へ変更</option>
+                    <option value="set_role_general">権限を一般ユーザーへ変更</option>
+                @endif
                 <option value="delete">削除</option>
             </select>
             <button type="submit" class="btn btn-sm btn-primary" id="bulkActionSubmit">
@@ -266,6 +271,11 @@ const bulkActionForm = document.getElementById('bulkActionForm');
 const bulkActionSelect = document.getElementById('bulkActionSelect');
 const selectAllUsers = document.getElementById('selectAllUsers');
 
+function getCookieValue(name) {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
 if (selectAllUsers) {
     selectAllUsers.addEventListener('change', function () {
         document.querySelectorAll('.row-user-checkbox:not(:disabled)').forEach((checkbox) => {
@@ -288,6 +298,13 @@ document.querySelectorAll('.row-user-checkbox').forEach((checkbox) => {
 if (bulkActionForm) {
     bulkActionForm.addEventListener('submit', function (event) {
         const selectedUsers = document.querySelectorAll('.row-user-checkbox:not(:disabled):checked');
+        const tokenInput = bulkActionForm.querySelector('input[name="_token"]');
+        const cookieToken = getCookieValue('XSRF-TOKEN');
+
+        // Keep CSRF token aligned with latest session cookie to avoid stale-token 419.
+        if (tokenInput && cookieToken) {
+            tokenInput.value = cookieToken;
+        }
 
         if (!bulkActionSelect.value) {
             event.preventDefault();
