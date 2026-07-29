@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>松高.net</title>
+    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <style>
         body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f0f0; }
         .box { text-align: center; color: #555; padding: 20px; }
