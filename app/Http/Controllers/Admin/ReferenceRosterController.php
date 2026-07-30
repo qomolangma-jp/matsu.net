@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ReferenceRoster;
 use Illuminate\Http\Request;
+use App\Services\ReferenceRosterSyncService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -104,93 +105,113 @@ class ReferenceRosterController extends Controller
         $totalCount = 0;
         $successCount = 0;
         $errorCount = 0;
+        $skippedCount = 0;
+        $syncResult = [];
 
-        DB::beginTransaction();
         try {
-            // テーブルクリア
-            if ($request->has('truncate') && $request->input('truncate') == '1') {
-                DB::table('reference_rosters')->truncate();
-                Log::info('参照名簿テーブルをクリア', ['user_id' => $user->id]);
-            }
+            DB::transaction(function () use (
+                $request,
+                $user,
+                &$totalCount,
+                &$successCount,
+                &$errorCount,
+                &$skippedCount,
+                &$syncResult
+            ) {
+                // テーブルクリア
+                if ($request->has('truncate') && $request->input('truncate') == '1') {
+                    DB::table('reference_rosters')->truncate();
+                    Log::info('参照名簿テーブルをクリア', ['user_id' => $user->id]);
+                }
 
-            // CSVファイルを取得
-            $file = $request->file('csv_file');
-            $handle = fopen($file->getRealPath(), 'r');
+                // CSVファイルを取得
+                $file = $request->file('csv_file');
+                $handle = fopen($file->getRealPath(), 'r');
 
-            if ($handle === false) {
-                throw new \Exception('CSVファイルを開けません');
-            }
+                if ($handle === false) {
+                    throw new \Exception('CSVファイルを開けません');
+                }
 
-            // 文字コード自動検出
-            $firstLine = fgets($handle);
-            rewind($handle);
+                // 文字コード自動検出
+                $firstLine = fgets($handle);
+                rewind($handle);
 
-            $encoding = mb_detect_encoding($firstLine, ['UTF-8', 'SJIS', 'EUC-JP', 'ASCII'], true);
+                $encoding = mb_detect_encoding($firstLine, ['UTF-8', 'SJIS', 'EUC-JP', 'ASCII'], true);
 
-            if ($encoding && $encoding !== 'UTF-8') {
-                stream_filter_prepend($handle, "convert.iconv.{$encoding}/UTF-8");
-            }
+                if ($encoding && $encoding !== 'UTF-8') {
+                    stream_filter_prepend($handle, "convert.iconv.{$encoding}/UTF-8");
+                }
 
-            // ヘッダー行をスキップ
-            fgetcsv($handle);
+                // ヘッダー行をスキップ
+                fgetcsv($handle);
 
-            // データ処理（チャンク処理）
-            $chunk = [];
-            $chunkSize = 1000;
-            $lineNumber = 1;
+                // データ処理（チャンク処理）
+                $chunk = [];
+                $chunkSize = 1000;
+                $lineNumber = 1;
+                $seenKeys = [];
 
-            while (($row = fgetcsv($handle)) !== false) {
-                $lineNumber++;
+                while (($row = fgetcsv($handle)) !== false) {
+                    $lineNumber++;
 
-                // 空行をスキップ（すべての列が空またはnull）
-                $hasData = false;
-                foreach ($row as $cell) {
-                    if (isset($cell) && trim($cell) !== '') {
-                        $hasData = true;
-                        break;
+                    // 空行をスキップ（すべての列が空またはnull）
+                    $hasData = false;
+                    foreach ($row as $cell) {
+                        if (isset($cell) && trim($cell) !== '') {
+                            $hasData = true;
+                            break;
+                        }
+                    }
+
+                    if (!$hasData) {
+                        continue; // 空行はカウントもスキップ
+                    }
+
+                    $totalCount++;
+
+                    // データ行が14列未満の場合はスキップ
+                    if (count($row) < 14) {
+                        $errorCount++;
+                        Log::warning("参照名簿CSVインポート: 列数不足", [
+                            'line' => $lineNumber,
+                            'columns' => count($row),
+                        ]);
+                        continue;
+                    }
+
+                    // データを配列に変換
+                    $data = $this->parseRow($row);
+
+                    if ($data) {
+                        $duplicateKey = $this->buildDuplicateKey($data);
+
+                        if ($this->isDuplicateReferenceRoster($data, $duplicateKey, $seenKeys)) {
+                            $skippedCount++;
+                            continue;
+                        }
+
+                        $chunk[] = $data;
+
+                        // チャンクサイズに達したらバルクインサート
+                        if (count($chunk) >= $chunkSize) {
+                            DB::table('reference_rosters')->insert($chunk);
+                            $successCount += count($chunk);
+                            $chunk = [];
+                        }
                     }
                 }
 
-                if (!$hasData) {
-                    continue; // 空行はカウントもスキップ
+                // 残りのチャンクをインサート
+                if (!empty($chunk)) {
+                    DB::table('reference_rosters')->insert($chunk);
+                    $successCount += count($chunk);
                 }
 
-                $totalCount++;
+                fclose($handle);
 
-                // データ行が14列未満の場合はスキップ
-                if (count($row) < 14) {
-                    $errorCount++;
-                    Log::warning("参照名簿CSVインポート: 列数不足", [
-                        'line' => $lineNumber,
-                        'columns' => count($row),
-                    ]);
-                    continue;
-                }
-
-                // データを配列に変換
-                $data = $this->parseRow($row);
-
-                if ($data) {
-                    $chunk[] = $data;
-
-                    // チャンクサイズに達したらバルクインサート
-                    if (count($chunk) >= $chunkSize) {
-                        DB::table('reference_rosters')->insert($chunk);
-                        $successCount += count($chunk);
-                        $chunk = [];
-                    }
-                }
-            }
-
-            // 残りのチャンクをインサート
-            if (!empty($chunk)) {
-                DB::table('reference_rosters')->insert($chunk);
-                $successCount += count($chunk);
-            }
-
-            fclose($handle);
-
-            DB::commit();
+                // 参照名簿同期を実行
+                $syncResult = app(ReferenceRosterSyncService::class)->syncExistingUsers();
+            });
 
             $endTime = microtime(true);
             $duration = round($endTime - $startTime, 2);
@@ -199,16 +220,18 @@ class ReferenceRosterController extends Controller
                 'user_id' => $user->id,
                 'total' => $totalCount,
                 'success' => $successCount,
+                'skipped' => $skippedCount,
                 'error' => $errorCount,
                 'duration' => $duration,
             ]);
 
+            $syncSummary = "自動承認: {$syncResult['approved']}件、学年管理者付与: {$syncResult['granted_year_admin']}件";
+
             return redirect()
                 ->route('admin.reference_rosters.index')
-                ->with('success', "CSVインポート完了: {$successCount}件を登録しました（処理時間: {$duration}秒）");
+                ->with('success', "CSVインポート完了: {$successCount}件を登録しました（{$skippedCount}件をスキップ、処理時間: {$duration}秒）。{$syncSummary}");
 
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (\Throwable $e) {
             Log::error('参照名簿CSVインポートエラー', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
@@ -245,6 +268,50 @@ class ReferenceRosterController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ];
+    }
+
+    /**
+     * 重複判定用のキーを生成
+     */
+    private function buildDuplicateKey(array $data): string
+    {
+        return implode("\0", [
+            $this->normalizeDuplicateValue($data['graduation_term'] ?? null),
+            $this->normalizeDuplicateValue($data['name'] ?? null),
+            $this->normalizeDuplicateValue($data['gender'] ?? null),
+        ]);
+    }
+
+    /**
+     * 重複判定用に値を正規化
+     */
+    private function normalizeDuplicateValue(mixed $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        return mb_strtolower(trim((string) $value), 'UTF-8');
+    }
+
+    /**
+     * 参照名簿に同一データが存在するか確認
+     */
+    private function isDuplicateReferenceRoster(array $data, string $duplicateKey, array &$seenKeys): bool
+    {
+        if (array_key_exists($duplicateKey, $seenKeys)) {
+            return true;
+        }
+
+        $exists = DB::table('reference_rosters')
+            ->where('graduation_term', $data['graduation_term'])
+            ->where('name', $data['name'])
+            ->where('gender', $data['gender'])
+            ->exists();
+
+        $seenKeys[$duplicateKey] = $exists;
+
+        return $exists;
     }
 
     /**

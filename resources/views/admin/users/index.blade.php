@@ -146,6 +146,7 @@
                         <th>氏名</th>
                         <th style="width:80px;">性別</th>
                         <th style="width:90px;">郵送</th>
+                        <th style="width:120px;">カテゴリー</th>
                         <th style="width:170px;">操作</th>
                     </tr>
                 </thead>
@@ -208,6 +209,15 @@
                                     <span class="badge bg-success">正常</span>
                                 @endif
                             </td>
+                            <td class="align-middle" style="font-size:0.85em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                @forelse($user->categories as $category)
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:0.75em; padding:0.25em 0.5em; margin-right:2px;">
+                                        {{ $category->name }}
+                                    </span>
+                                @empty
+                                    <span class="text-muted" style="font-size:0.85em;">-</span>
+                                @endforelse
+                            </td>
                             <td class="align-middle">
                                 <select class="form-select form-select-sm"
                                         onchange="handleRowAction(this, {{ $user->id }}, @js($user->full_name))"
@@ -227,7 +237,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">
+                            <td colspan="9" class="text-center py-4 text-muted">
                                 該当するユーザーが見つかりませんでした。
                             </td>
                         </tr>

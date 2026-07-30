@@ -292,6 +292,9 @@ class UserManagementController extends Controller
 
             $user->update($validated);
 
+            // 参照名簿照合による自動承認・学年管理者付与は、CSVインポート時および新規登録時のみ実施
+            // 管理者編集画面では実行しない
+
             // カテゴリーを同期（中間テーブルを更新）
             $user->categories()->sync($categories);
 
@@ -745,6 +748,35 @@ class UserManagementController extends Controller
             'female' => '女性',
             'other' => 'その他',
         ][$gender] ?? ($gender ?? '');
+    }
+
+    private function applyRosterBasedRoleAndApproval(User $user): void
+    {
+        $name = str_replace([' ', '　'], '', $user->last_name . $user->first_name);
+        $graduationTerms = [
+            '高校' . ($user->graduation_year - 1947) . '回期',
+            '高校' . ($user->graduation_year - 1967) . '回期',
+        ];
+
+        $matchedRoster = DB::table('reference_rosters')
+            ->whereIn('graduation_term', $graduationTerms)
+            ->whereRaw("REPLACE(REPLACE(name, ' ', ''), '　', '') = ?", [$name])
+            ->first();
+
+        if (!$matchedRoster) {
+            return;
+        }
+
+        if (!str_contains((string) ($matchedRoster->role_1 ?? ''), '常任理事')) {
+            return;
+        }
+
+        $user->update([
+            'role' => 'year_admin',
+            'approval_status' => 'approved',
+            'approved_at' => now(),
+            'approval_note' => '参照名簿の役職情報により学年管理者として自動承認',
+        ]);
     }
 
     /**

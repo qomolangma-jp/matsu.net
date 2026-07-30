@@ -34,6 +34,8 @@ class RegisterRequest extends FormRequest
             'email' => 'required|email|max:255',
             'postal_code' => 'nullable|string|max:10|regex:/^\d{3}-?\d{4}$/',
             'address' => 'nullable|string|max:500',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:categories,id',
         ];
     }
 

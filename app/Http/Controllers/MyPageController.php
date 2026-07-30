@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Category;
 use App\Models\News;
 use App\Models\Event;
 use Illuminate\Http\Request;
@@ -58,8 +59,15 @@ class MyPageController extends Controller
         if (!$user) {
             return redirect()->route('register.form');
         }
+
+        // アクティブな地区会カテゴリーを取得
+        $categories = Category::where('type', 'district')
+            ->active()
+            ->orderBy('display_order')
+            ->orderBy('name')
+            ->get();
         
-        return view('mypage.edit', compact('user'));
+        return view('mypage.edit', compact('user', 'categories'));
     }
 
     /**
@@ -85,6 +93,8 @@ class MyPageController extends Controller
             'postal_code' => 'nullable|string|max:10',
             'address' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:20',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:categories,id',
         ], [
             'last_name.required' => '姓は必須です。',
             'first_name.required' => '名は必須です。',
@@ -100,13 +110,30 @@ class MyPageController extends Controller
         DB::beginTransaction();
         
         try {
+            // カテゴリー情報を分離
+            $categories = $validated['categories'] ?? [];
+            unset($validated['categories']);
+
             $user->update($validated);
+
+            // カテゴリーを同期
+            if (!empty($categories)) {
+                $categoryIds = array_filter($categories, fn($id) => is_numeric($id));
+                $user->categories()->sync($categoryIds);
+            } else {
+                // 地区会カテゴリーのみ削除（他の役職カテゴリーは保持）
+                $districtCategoryIds = Category::where('type', 'district')
+                    ->pluck('id')
+                    ->toArray();
+                $user->categories()->detach($districtCategoryIds);
+            }
             
             DB::commit();
             
             Log::info('プロフィール更新', [
                 'user_id' => $user->id,
                 'updated_fields' => array_keys($validated),
+                'categories' => $categories,
             ]);
             
             return redirect()->route('mypage.index')

@@ -213,6 +213,33 @@
                         </div>
                     </div>
 
+                    <!-- 地区会 -->
+                    <div class="mb-3">
+                        <label class="form-label">地区会</label>
+                        <div class="row">
+                            @forelse($categories as $category)
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               name="categories[]" 
+                                               value="{{ $category->id }}" 
+                                               id="category{{ $category->id }}"
+                                               {{ in_array($category->id, old('categories', [])) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="category{{ $category->id }}">
+                                            {{ $category->name }}
+                                        </label>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="col-12">
+                                    <p class="text-muted">登録されている地区会がありません。</p>
+                                </div>
+                            @endforelse
+                        </div>
+                        <small class="text-muted">複数選択可能です。案内を希望される地区会があればお選びください。</small>
+                    </div>
+
                     <!-- メールアドレス -->
                     <div class="mb-3">
                         <label for="email" class="form-label required">メールアドレス</label>

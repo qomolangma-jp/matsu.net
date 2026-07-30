@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\ReferenceRoster;
+use App\Models\Category;
 use App\Models\Setting;
 use App\Mail\ApprovalRequestMail;
 use App\Http\Requests\RegisterRequest;
@@ -59,7 +60,14 @@ class RegisterController extends Controller
         // /auth/line から引き継いだ line_id（未登録ユーザー）
         $lineId = $request->input('line_id', '');
 
-        return view('register', compact('lineId'));
+        // アクティブな地区会カテゴリーを取得
+        $categories = Category::where('type', 'district')
+            ->active()
+            ->orderBy('display_order')
+            ->orderBy('name')
+            ->get();
+
+        return view('register', compact('lineId', 'categories'));
     }
 
     /**
@@ -154,6 +162,20 @@ class RegisterController extends Controller
                 'role' => 'general', // 初期登録は一般ユーザー
                 'approval_status' => $matchResult['status'], // 'approved' or 'pending'
             ]);
+
+            // カテゴリーを割り当て
+            if ($request->has('categories') && is_array($request->categories)) {
+                $categoryIds = array_filter($request->categories, fn($id) => is_numeric($id));
+                if (!empty($categoryIds)) {
+                    $user->categories()->sync($categoryIds);
+                    Log::info('ユーザーにカテゴリーを割り当て', [
+                        'user_id' => $user->id,
+                        'categories' => $categoryIds,
+                    ]);
+                }
+            }
+
+            $this->applyRosterBasedPermissions($user, $matchResult['matched_roster']);
 
             // 完全一致の場合は自動承認
             if ($matchResult['status'] === 'approved') {
@@ -285,6 +307,26 @@ class RegisterController extends Controller
             'match_type' => 'none',
             'matched_roster' => null,
         ];
+    }
+
+    private function applyRosterBasedPermissions(User $user, ?ReferenceRoster $matchedRoster): void
+    {
+        if (!$matchedRoster) {
+            return;
+        }
+
+        $shouldGrantYearAdmin = str_contains((string) ($matchedRoster->role_1 ?? ''), '常任理事');
+
+        if (!$shouldGrantYearAdmin) {
+            return;
+        }
+
+        $user->update([
+            'role' => 'year_admin',
+            'approval_status' => 'approved',
+            'approved_at' => now(),
+            'approval_note' => '参照名簿の役職情報により学年管理者として自動承認',
+        ]);
     }
 
     /**
