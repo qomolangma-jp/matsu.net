@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>学年管理者マニュアル - 松高.net</title>
+    <meta name="description" content="松高.net の学年管理者（幹事）様向け図解操作マニュアルページです。">
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 学年管理者マニュアル用追加ビジュアルスタイル */
+        .step-badge {
+            display: inline-block;
+            background-color: #2e7d32;
+            color: #fff;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .step-block {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .step-header {
+            border-bottom: 2px solid #e8f5e9;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+            color: #1f2520;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .step-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .step-grid {
+                grid-template-columns: 320px 1fr;
+                align-items: start;
+            }
+        }
+
+        .step-image-wrap {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+
+        .step-image-wrap img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .step-desc p {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #333;
+            margin-top: 0;
+        }
+
+        .point-box {
+            background-color: #f1f8e9;
+            border-left: 5px solid #2e7d32;
+            padding: 14px 16px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 16px;
+            font-size: 0.98rem;
+        }
+
+        .point-box strong {
+            color: #1b5e20;
+        }
+
+        .ui-tag {
+            display: inline-block;
+            background: #e8e8e8;
+            border: 1px solid #ccc;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #222;
+        }
+    </style>
+</head>
+<body>
+    <header class="hero-container">
+        <div class="polygon-bg polygon-bg-left"></div>
+        <div class="polygon-bg polygon-bg-right"></div>
+        <div class="logo-outer">
+            <img src="../images/logo_banner.png" alt="松高.net ロゴ" class="logo-img">
+        </div>
+        <div class="hero-content">
+            <span class="hero-tag">Official Admin Manual</span>
+            <h1 class="hero-title">学年管理者 かんたん図解マニュアル</h1>
+            <p class="hero-desc">実際のスマホ画面を見ながら順番に進めるだけで、新メンバーの承認作業が完了します。</p>
+        </div>
+    </header>
+
+    <nav class="sticky-nav" aria-label="目次">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-btn">トップ（一般用）</a>
+            <a href="#menu-access" class="nav-btn">1. 管理画面の開き方</a>
+            <a href="#approval-flow" class="nav-btn">2. 承認作業（図解）</a>
+            <a href="#csv-export" class="nav-btn">3. 名簿ダウンロード</a>
+            <a href="#faq-admin" class="nav-btn">幹事FAQ</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+
+        <!-- 1. 管理画面へのアクセス -->
+        <section id="menu-access" class="section-outer">
+            <div class="sec-title-wrap">
+                <span class="sec-title-en">STEP 01</span>
+                <h2 class="sec-title-jp">管理画面（名簿管理）を開く</h2>
+            </div>
+
+            <div class="step-block">
+                <div class="step-header">
+                    <span class="step-badge">手順 1-1</span>
+                    <h3 class="step-title">マイページの右上「メニューボタン」をタップ</h3>
+                </div>
+                <div class="step-grid">
+                    <div class="step-image-wrap">
+                        <img src="Screenshot_20260731-122202.png" alt="マイページ画面">
+                    </div>
+                    <div class="step-desc">
+                        <p>LINEからログインすると最初に表示される「マイページ」です。</p>
+                        <p>画面右上にある緑色の <span class="ui-tag">≡ メニュー</span> ボタンを指で押します。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-block">
+                <div class="step-header">
+                    <span class="step-badge">手順 1-2</span>
+                    <h3 class="step-title">「名簿管理」を選ぶ</h3>
+                </div>
+                <div class="step-grid">
+                    <div class="step-image-wrap">
+                        <img src="Screenshot_20260731-122208.png" alt="メニュー一覧画面">
+                    </div>
+                    <div class="step-desc">
+                        <p>緑色の「学年管理者メニュー」エリアの中にある <span class="ui-tag">👥 名簿管理</span> をタップします。</p>
+                        <div class="point-box">
+                            <strong>💡 ポイント：</strong><br>
+                            幹事権限を持っているアカウントでのみ、この「学年管理者メニュー」が表示されます。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 承認作業の流れ -->
+        <section id="approval-flow" class="section-outer">
+            <div class="sec-title-wrap">
+                <span class="sec-title-en">STEP 02</span>
+                <h2 class="sec-title-jp">「承認待ち」の同級生を承認する</h2>
+            </div>
+
+            <p class="mini-note" style="text-align: center; max-width: 650px; margin: -20px auto 40px;">
+                旧姓で登録した方や同姓同名がいる方は「承認待ち」に入ります。<br>
+                画像の手順通りに進めるだけで、1分で承認が完了します。
+            </p>
+
+            <!-- 手順 2-1 -->
+            <div class="step-block">
+                <div class="step-header">
+                    <span class="step-badge">手順 2-1</span>
+                    <h3 class="step-title">「承認待ち」を選んで【検索】を押す</h3>
+                </div>
+                <div class="step-grid">
+                    <div class="step-image-wrap">
+                        <img src="Screenshot_20260731-122403.png" alt="承認状態の選択">
+                    </div>
+                    <div class="step-desc">
+                        <p>名簿管理画面が開いたら、絞り込み検索枠の中にある「承認」の項目で <span class="ui-tag">承認待ち</span> をタップして選びます。</p>
+                        <p>選んだら、緑色の <span class="ui-tag">🔍 検索</span> ボタンを押してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手順 2-2 -->
+            <div class="step-block">
+                <div class="step-header">
+                    <span class="step-badge">手順 2-2</span>
+                    <h3 class="step-title">承認待ちの同級生一覧を確認する</h3>
+                </div>
+                <div class="step-grid">
+                    <div class="step-image-wrap">
+                        <img src="Screenshot_20260731-122412.png" alt="承認待ち一覧">
+                    </div>
+                    <div class="step-desc">
+                        <p>現在、幹事さんの確認を待っている同級生（オレンジ色の「待ち」マークがついた方）の一覧が表示されます。</p>
+                        <p>お名前や卒業年（回数）に間違いがないか確認します。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手順 2-3 -->
+            <div class="step-block">
+                <div class="step-header">
+                    <span class="step-badge">手順 2-3</span>
+                    <h3 class="step-title">承認する人にチェックを入れる</h3>
+                </div>
+                <div class="step-grid">
+                    <div class="step-image-wrap">
+                        <img src="Screenshot_20260731-122428.png" alt="チェックボックス選択">
+                    </div>
+                    <div class="step-desc">
+                        <p>承認したい人の左側にある <span class="ui-tag">☑ チェックボックス</span> をタップしてチェックを入れます。</p>
+                        <p>一番上の四角にチェックを入れると、表示されている全員を一括で選択できます。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手順 2-4 -->
+            <div class="step-block">
+                <div class="step-header">
+                    <span class="step-badge">手順 2-4</span>
+                    <h3 class="step-title">操作メニューから「承認済みに変更」を選ぶ</h3>
+                </div>
+                <div class="step-grid">
+                    <div class="step-image-wrap">
+                        <img src="Screenshot_20260731-122424.png" alt="一括操作の選択">
+                    </div>
+                    <div class="step-desc">
+                        <p>「一括操作を選択」と書いてある場所をタップし、メニューの中から <span class="ui-tag">承認済みに変更</span> を選びます。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手順 2-5 -->
+            <div class="step-block">
+                <div class="step-header">
+                    <span class="step-badge">手順 2-5</span>
+                    <h3 class="step-title">【実行】ボタンを押して完了！</h3>
+                </div>
+                <div class="step-grid">
+                    <div class="step-image-wrap">
+                        <img src="Screenshot_20260731-122456.png" alt="実行後の画面">
+                    </div>
+                    <div class="step-desc">
+                        <p>隣にある緑色の <span class="ui-tag">実行</span> ボタンを押します。</p>
+                        <p>再度、絞り込んだ際に画面に「該当するユーザーが見つかりませんでした」と表示されたら、承認手続きは無事に完了です！</p>
+                        <div class="point-box">
+                            <strong>✨ これで完了です！</strong><br>
+                            承認された同級生への自動的なLINE通知はございませんので、ご了承ください。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. CSVダウンロード -->
+        <section id="csv-export" class="section-outer">
+            <div class="sec-title-wrap">
+                <span class="sec-title-en">STEP 03</span>
+                <h2 class="sec-title-jp">名簿データを手元に保存する（CSV保存）</h2>
+            </div>
+
+            <div class="step-block">
+                <div class="step-grid">
+                    <div class="step-image-wrap">
+                        <img src="Screenshot_20260731-122353.png" alt="名簿一覧とCSVダウンロードボタン">
+                    </div>
+                    <div class="step-desc">
+                        <p>名簿管理画面の右上にある緑色の <span class="ui-tag">↓ CSVダウンロード</span> ボタンを押すと、担当学年の最新名簿をファイルとして保存できます。</p>
+                        <div class="point-box">
+                            <strong>🔒 安全管理のお願い：</strong><br>
+                            ダウンロードしたファイルは大切な個人情報です。同窓会の案内目的以外での利用や、共有パソコンへの放置は行わないようお願いいたします。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. FAQ -->
+        <section id="faq-admin" class="section-outer">
+            <div class="sec-title-wrap">
+                <span class="sec-title-en">FAQ</span>
+                <h2 class="sec-title-jp">よくあるご質問（幹事様用）</h2>
+            </div>
+
+            <div class="faq-container">
+                <div class="faq-panel">
+                    <h4 class="faq-q-text"><span class="faq-badge-q">Q.</span>知らない人が「承認待ち」にいますが、どうすればいいですか？</h4>
+                    <p class="faq-a-text">旧姓や漢字の違いで自動一致しなかった同級生の可能性があります。卒対名簿やアルバム等でご確認いただき、判断がつかない場合は無理に操作せず本部事務局までご相談ください。</p>
+                </div>
+
+                <div class="faq-panel">
+                    <h4 class="faq-q-text"><span class="faq-badge-q">Q.</span>押し間違えて別の操作をしてしまわないか不安です。</h4>
+                    <p class="faq-a-text">基本的な操作は「チェックを入れて」「承認済みに変更」して「実行」するだけです。万が一間違えて削除等をしてしまった場合は、本部側で復元できますのでご安心ください。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer-note">
+        <div style="margin-bottom: 12px; font-weight: 700; letter-spacing: 0.1em; color: rgba(31, 37, 32, 0.8);">松高.net 学年管理者マニュアル</div>
+        <p class="mini-note">最終更新日: 2026-07-31<br>&copy; 2026 松高.net All Rights Reserved.</p>
+    </footer>
+</body>
+</html>
