@@ -44,7 +44,7 @@
                     </div>
                 @endif
 
-                <div class="news-body" style="line-height: 1.8; white-space: pre-wrap;">{{ $news->body }}</div>
+                <div class="news-body" style="line-height: 1.8; white-space: pre-wrap;">{!! $news->body_with_links !!}</div>
 
                 @if($news->creator)
                     <hr>

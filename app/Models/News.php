@@ -114,4 +114,28 @@ class News extends Model
 
         return '全権限';
     }
+
+    /**
+     * 本文内のURLを自動的にaタグで囲む
+     */
+    public function getBodyWithLinksAttribute()
+    {
+        if (!$this->body) {
+            return '';
+        }
+
+        $body = $this->body;
+        
+        // http(s)://で始まるURLパターンをマッチング
+        $pattern = '/https?:\/\/[^\s\)]+/i';
+        
+        $body = preg_replace_callback($pattern, function($matches) {
+            $url = $matches[0];
+            // URLの末尾の句読点を除外
+            $url = rtrim($url, '.,!?;:）');
+            return '<a href="' . htmlspecialchars($url) . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($url) . '</a>';
+        }, $body);
+        
+        return $body;
+    }
 }
