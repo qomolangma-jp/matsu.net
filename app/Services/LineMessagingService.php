@@ -9,11 +9,15 @@ use App\Models\LineNotificationLog;
 use App\Models\Setting;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Carbon;
 
 class LineMessagingService
 {
     private ?string $channelAccessToken;
     private string $apiUrl = 'https://api.line.me/v2/bot/message/push';
+    private bool $lineLimitExceeded = false;
+    private int $remainingCount = 0;
 
     public function __construct()
     {
@@ -26,10 +30,11 @@ class LineMessagingService
 
     /**
      * News/Event を対象にLINE送信し、ログに記録する
+     * 月間上限超過時はメール送信にフォールバック
      *
      * @param News|Event $notifiable
      * @param bool $resendAll true=全員へ再送（既送信含む）  false=未送信のみ
-     * @return array ['success_count', 'failure_count', 'errors', 'target_count']
+     * @return array ['success_count', 'failure_count', 'errors', 'target_count', 'line_count', 'email_count', 'remaining_line_quota']
      */
     public function sendNotification($notifiable, bool $resendAll = false): array
     {
@@ -65,8 +70,15 @@ class LineMessagingService
                 'failure_count' => 0,
                 'errors'        => [],
                 'target_count'  => 0,
+                'line_count'    => 0,
+                'email_count'   => 0,
+                'remaining_line_quota' => LineNotificationLog::getRemainingCount(),
             ];
         }
+
+        // 月間制限をチェック
+        $this->remainingCount = LineNotificationLog::getRemainingCount();
+        $this->lineLimitExceeded = $this->remainingCount <= 0;
 
         $messages = $notifiable instanceof News
             ? $this->buildNewsMessage($notifiable)
@@ -74,26 +86,52 @@ class LineMessagingService
 
         $successCount = 0;
         $failureCount = 0;
-        $errors       = [];
+        $lineCount = 0;
+        $emailCount = 0;
+        $errors = [];
+        $currentMonth = Carbon::now()->format('Y-m');
 
         foreach ($users as $user) {
             try {
-                $result = $this->sendPushMessage($user->line_id, $messages);
-                if ($result) {
-                    $successCount++;
-                    // 送信ログを記録
-                    LineNotificationLog::create([
-                        'notifiable_type' => get_class($notifiable),
-                        'notifiable_id'   => $notifiable->id,
-                        'user_id'         => $user->id,
-                    ]);
+                // LINE月間制限をチェック
+                if ($this->lineLimitExceeded || $this->remainingCount <= 0) {
+                    // メール送信にフォールバック
+                    if ($user->email) {
+                        $result = $this->sendEmailNotification($user, $notifiable);
+                        if ($result) {
+                            $successCount++;
+                            $emailCount++;
+                        } else {
+                            $failureCount++;
+                            $errors[] = "{$user->full_name}: メール送信失敗";
+                        }
+                    } else {
+                        $failureCount++;
+                        $errors[] = "{$user->full_name}: LINE上限超過かつメールアドレス未登録";
+                    }
                 } else {
-                    $failureCount++;
+                    // LINE送信を試行
+                    $result = $this->sendPushMessage($user->line_id, $messages);
+                    if ($result) {
+                        $successCount++;
+                        $lineCount++;
+                        $this->remainingCount--;
+
+                        // 送信ログを記録
+                        LineNotificationLog::create([
+                            'notifiable_type' => get_class($notifiable),
+                            'notifiable_id'   => $notifiable->id,
+                            'user_id'         => $user->id,
+                            'notification_month' => $currentMonth,
+                        ]);
+                    } else {
+                        $failureCount++;
+                    }
                 }
             } catch (\Exception $e) {
                 $failureCount++;
                 $errors[] = "{$user->full_name}: {$e->getMessage()}";
-                Log::error('LINE送信エラー', [
+                Log::error('LINE/Email送信エラー', [
                     'user_id'         => $user->id,
                     'notifiable_type' => get_class($notifiable),
                     'notifiable_id'   => $notifiable->id,
@@ -107,6 +145,9 @@ class LineMessagingService
             'failure_count' => $failureCount,
             'errors'        => $errors,
             'target_count'  => $users->count(),
+            'line_count'    => $lineCount,
+            'email_count'   => $emailCount,
+            'remaining_line_quota' => max(0, $this->remainingCount),
         ];
     }
 
@@ -335,6 +376,125 @@ class LineMessagingService
                 'text' => $text,
             ],
         ];
+    }
+
+    /**
+     * メール経由で通知を送信（LINE上限超過時のフォールバック）
+     * 
+     * @param User $user
+     * @param News|Event $notifiable
+     * @return bool
+     */
+    private function sendEmailNotification(User $user, $notifiable): bool
+    {
+        try {
+            $subject = '';
+            $body = '';
+            $url = '';
+
+            if ($notifiable instanceof News) {
+                $subject = "【松高.net】お知らせ: {$notifiable->title}";
+                $url = url('/news/' . $notifiable->id);
+                $body = $this->buildEmailNewsBody($notifiable, $url);
+            } elseif ($notifiable instanceof Event) {
+                $subject = "【松高.net】イベント: {$notifiable->title}";
+                $url = url('/events/' . $notifiable->id);
+                $body = $this->buildEmailEventBody($notifiable, $url);
+            } else {
+                return false;
+            }
+
+            // メール送信
+            Mail::send('emails.notification', [
+                'user' => $user,
+                'subject_title' => $notifiable->title,
+                'body' => $body,
+                'url' => $url,
+                'notifiable' => $notifiable,
+            ], function ($message) use ($user, $subject) {
+                $message->to($user->email)
+                        ->subject($subject);
+            });
+
+            Log::info('メール送信成功', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'notifiable_type' => get_class($notifiable),
+                'notifiable_id' => $notifiable->id,
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('メール送信エラー', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * ニュース用メール本文を構築
+     */
+    private function buildEmailNewsBody(News $news, string $url): string
+    {
+        $sender = $news->creator;
+        $senderName = ($sender && $sender->role === 'master_admin') ? '同窓会事務局' : ($sender->full_name ?? '松高.net');
+
+        return <<<EOT
+お知らせ: {$news->title}
+
+{$news->body}
+
+詳細はこちらをご確認ください:
+{$url}
+
+送信者: {$senderName}
+
+※このメールはLINE プッシュ通知の月間上限超過のため、
+メールで送信されています。
+EOT;
+    }
+
+    /**
+     * イベント用メール本文を構築
+     */
+    private function buildEmailEventBody(Event $event, string $url): string
+    {
+        $sender = $event->creator;
+        $senderName = ($sender && $sender->role === 'master_admin') ? '同窓会事務局' : ($sender->full_name ?? '松高.net');
+        
+        $dateStr = '';
+        if ($event->event_date) {
+            $dateStr = "日時: {$event->event_date->format('Y年m月d日 H:i')}\n";
+        }
+        
+        $locationStr = '';
+        if ($event->location) {
+            $locationStr = "場所: {$event->location}\n";
+        }
+        
+        $deadlineStr = '';
+        if ($event->deadline) {
+            $deadlineStr = "締切: {$event->deadline->format('Y年m月d日')}\n";
+        }
+
+        return <<<EOT
+イベント情報: {$event->title}
+
+{$dateStr}{$locationStr}{$deadlineStr}
+概要:
+{$event->description}
+
+詳細・出欠回答はこちらをご確認ください:
+{$url}
+
+送信者: {$senderName}
+
+※このメールはLINE プッシュ通知の月間上限超過のため、
+メールで送信されています。
+EOT;
     }
 
     /**

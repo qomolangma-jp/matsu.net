@@ -33,6 +33,66 @@
     </div>
 </div>
 
+{{-- LINE プッシュ通知の状況（マスター管理者のみ） --}}
+@if($linePushStats)
+<div class="row g-2 mb-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-chat-dots"></i> LINE プッシュ通知 - 今月の状況</span>
+                <a href="{{ route('admin.settings.index') }}" class="btn btn-sm btn-light">
+                    <i class="bi bi-gear"></i> 設定
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <small class="d-block text-muted mb-2">上限数</small>
+                            <h4>{{ $linePushStats['limit'] }} 通</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <small class="d-block text-muted mb-2">今月の送信済み</small>
+                            <h4>{{ $linePushStats['sent'] }} 通</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <small class="d-block text-muted mb-2">残り送信可能</small>
+                            <h4 class="@if($linePushStats['remaining'] <= 0) text-danger @elseif($linePushStats['remaining'] <= 20) text-warning @else text-success @endif">
+                                {{ $linePushStats['remaining'] }} 通
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <small class="d-block text-muted mb-2">使用率</small>
+                            <h4 class="@if($linePushStats['percentage'] >= 100) text-danger @elseif($linePushStats['percentage'] >= 80) text-warning @else text-success @endif">
+                                {{ $linePushStats['percentage'] }}%
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 25px;">
+                    @php
+                        $progressClass = $linePushStats['percentage'] >= 100 ? 'bg-danger' : ($linePushStats['percentage'] >= 80 ? 'bg-warning' : 'bg-success');
+                    @endphp
+                    <div class="progress-bar {{ $progressClass }}" role="progressbar" 
+                         style="width: {{ min($linePushStats['percentage'], 100) }}%;" 
+                         aria-valuenow="{{ min($linePushStats['percentage'], 100) }}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    ※ 上限を超えた場合、ユーザーのメールアドレスで通知が送信されます
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="row g-3">
 
     {{-- 未承認ユーザー --}}

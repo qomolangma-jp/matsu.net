@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\LineNotificationLog;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
@@ -11,7 +12,18 @@ class SettingController extends Controller
     public function index()
     {
         $settings = Setting::orderBy('group')->orderBy('key')->get()->groupBy('group');
-        return view('admin.settings.index', compact('settings'));
+        
+        // LINE 通知の残り送信可能数を計算
+        $linePushRemaining = LineNotificationLog::getRemainingCount();
+        $linePushSent = LineNotificationLog::getThisMonthCount();
+        $linePushLimit = (int) Setting::get('line_push_limit', 200);
+
+        return view('admin.settings.index', compact(
+            'settings',
+            'linePushRemaining',
+            'linePushSent',
+            'linePushLimit'
+        ));
     }
 
     public function update(Request $request)
@@ -24,6 +36,7 @@ class SettingController extends Controller
             'registration_closed_message' => ['nullable', 'string', 'max:1000'],
             'line_channel_access_token'   => ['nullable', 'string', 'max:500'],
             'liff_id'                     => ['nullable', 'string', 'max:100'],
+            'line_push_limit'             => ['required', 'integer', 'min:1', 'max:10000'],
         ];
 
         $validated = $request->validate($rules);

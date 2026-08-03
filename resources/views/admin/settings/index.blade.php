@@ -125,6 +125,62 @@
                 <div class="form-text">{{ $byKeyL['liff_id']['description'] ?? 'LIFF IDを設定すると、LINE通知のリンクがLIFF URL経由（LINE内ブラウザで開く）になります。' }}</div>
                 @error('liff_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
+
+            {{-- LINE プッシュ通知の月間上限 --}}
+            <div class="mt-4 pt-4 border-top">
+                <h6 class="mb-3">プッシュ通知の月間上限設定</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="line_push_limit" class="form-label required">月間送信上限数</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control @error('line_push_limit') is-invalid @enderror"
+                                   id="line_push_limit" name="line_push_limit"
+                                   value="{{ old('line_push_limit', $byKeyL['line_push_limit']['value'] ?? $linePushLimit) }}"
+                                   min="1" max="10000">
+                            <span class="input-group-text">通</span>
+                        </div>
+                        <div class="form-text">LINE無料プランは月200通まで（デフォルト: 200）</div>
+                        @error('line_push_limit')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                {{-- 今月の送信状況 --}}
+                <div class="mt-4 p-3 bg-light rounded border">
+                    <h6 class="mb-3">今月のプッシュ通知送信状況</h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <div class="text-muted small">上限数</div>
+                            <div class="h5 mb-0">{{ $linePushLimit }} 通</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="text-muted small">今月の送信済み</div>
+                            <div class="h5 mb-0">{{ $linePushSent }} 通</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="text-muted small">残り送信可能</div>
+                            <div class="h5 mb-0">
+                                <span class="@if($linePushRemaining <= 0) text-danger @elseif($linePushRemaining <= 20) text-warning @else text-success @endif">
+                                    {{ $linePushRemaining }} 通
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 25px;">
+                        @php
+                            $percentage = $linePushLimit > 0 ? round(($linePushSent / $linePushLimit) * 100) : 0;
+                            $progressClass = $percentage >= 100 ? 'bg-danger' : ($percentage >= 80 ? 'bg-warning' : 'bg-success');
+                        @endphp
+                        <div class="progress-bar {{ $progressClass }}" role="progressbar" 
+                             style="width: {{ min($percentage, 100) }}%;" 
+                             aria-valuenow="{{ min($percentage, 100) }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ $percentage }}%
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        ※ 上限を超えた場合、ユーザーのメールアドレスで通知が送信されます
+                    </small>
+                </div>
+            </div>
         </div>
     </div>
 

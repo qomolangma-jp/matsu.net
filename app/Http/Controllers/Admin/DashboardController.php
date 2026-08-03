@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Event;
 use App\Models\News;
+use App\Models\LineNotificationLog;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -67,8 +69,23 @@ class DashboardController extends Controller
             'total_news'     => (clone $newsQuery)->count(),
         ];
 
+        // LINE プッシュ通知の状況（マスター管理者のみ表示）
+        $linePushStats = null;
+        if ($admin->role === 'master_admin') {
+            $linePushLimit = (int) Setting::get('line_push_limit', 200);
+            $linePushSent = LineNotificationLog::getThisMonthCount();
+            $linePushRemaining = LineNotificationLog::getRemainingCount();
+
+            $linePushStats = [
+                'limit' => $linePushLimit,
+                'sent' => $linePushSent,
+                'remaining' => $linePushRemaining,
+                'percentage' => $linePushLimit > 0 ? round(($linePushSent / $linePushLimit) * 100) : 0,
+            ];
+        }
+
         return view('admin.dashboard', compact(
-            'latestUsers', 'pendingUsers', 'latestEvents', 'latestNews', 'stats'
+            'latestUsers', 'pendingUsers', 'latestEvents', 'latestNews', 'stats', 'linePushStats'
         ));
     }
 }
