@@ -173,7 +173,7 @@
                     @endif
 
                     <!-- LINE通知 -->
-                    <div class="mb-4">
+                    <div class="mb-4 p-3 rounded border border-info bg-light">
                         <div class="form-check form-switch">
                             <input class="form-check-input" 
                                    type="checkbox" 
@@ -185,8 +185,13 @@
                                 <i class="bi bi-line"></i> LINE通知を送信する
                             </label>
                         </div>
-                        <div class="form-text">
-                            対象ユーザーにLINEメッセージを送信します（公開時のみ）
+                        <div class="form-text mt-2">
+                            <i class="bi bi-info-circle"></i>
+                            対象ユーザーにLINEメッセージを送信します（公開時のみ）。<br>
+                            <small class="text-muted">
+                                ※ LINEのプッシュ通知には月間上限があり（デフォルト: 200通）、
+                                上限を超えた場合はユーザーのメールアドレスでお知らせが送信されます。
+                            </small>
                         </div>
                     </div>
 

@@ -142,6 +142,11 @@
                     <!-- LINE通知セクション -->
                     <div class="mb-4 p-3 rounded border border-success bg-light">
                         <h6 class="mb-3"><i class="bi bi-line text-success"></i> LINE通知</h6>
+                        <div class="alert alert-info small mb-3">
+                            <i class="bi bi-info-circle"></i>
+                            LINEのプッシュ通知には月間上限があり（デフォルト: 200通）、
+                            上限を超えた場合はユーザーのメールアドレスでお知らせが送信されます。
+                        </div>
                         <div class="row text-center mb-3">
                             <div class="col-4">
                                 <div class="fs-4 fw-bold text-success">{{ $lineSentCount }}</div>
