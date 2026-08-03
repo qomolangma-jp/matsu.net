@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
+
+        // LINE 月間カウント自動リセット（すべてのリクエストで実行）
+        $middleware->append(\App\Http\Middleware\ResetLineMonthlyCountIfNeeded::class);
+
         $middleware->redirectGuestsTo(function (Request $request) {
             $path = '/'.$request->path();
 

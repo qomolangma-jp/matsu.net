@@ -38,7 +38,7 @@ class LineNotificationLog extends Model
     /**
      * 月が変わっているかをチェックし、必要に応じてリセット
      */
-    private static function resetMonthIfNeeded(): void
+    public static function resetMonthIfNeeded(): void
     {
         $currentMonth = Carbon::now()->format('Y-m');
         $lastStoredMonth = Setting::get('line_push_current_month', $currentMonth);
