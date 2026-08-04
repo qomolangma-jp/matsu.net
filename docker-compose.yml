@@ -56,7 +56,7 @@ services:
        - "3309:3306"
     networks:
       - matsu-network
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=256M --wait-timeout=28800 --interactive-timeout=28800 --net-read-timeout=60 --net-write-timeout=60
 
   # phpMyAdmin（データベース管理用）
   phpmyadmin:

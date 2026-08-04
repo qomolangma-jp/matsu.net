@@ -188,6 +188,16 @@ class ImportRosters extends Command
     private function parseRow(array $row, int $lineNumber): ?array
     {
         try {
+            $phone = $this->cleanString($row[13] ?? null);
+            
+            // 電話番号が30文字を超える場合はnullで保存（DBスキーマの制限に対応）
+            if ($phone && mb_strlen($phone, 'UTF-8') > 30) {
+                $phone = null;
+            }
+            
+            // 郵便番号のバリデーション・整形
+            $postalCode = $this->validateAndCleanPostalCode($this->cleanString($row[9] ?? null));
+            
             return [
                 'graduation_term' => $this->cleanString($row[0] ?? ''),
                 'name' => $this->cleanString($row[1] ?? ''),
@@ -198,11 +208,11 @@ class ImportRosters extends Command
                 'former_name' => $this->cleanString($row[6] ?? null),
                 'kana' => $this->cleanString($row[7] ?? null),
                 'notes' => $this->cleanString($row[8] ?? null),
-                'postal_code' => $this->cleanString($row[9] ?? null),
+                'postal_code' => $postalCode,
                 'address_1' => $this->cleanString($row[10] ?? null),
                 'address_2' => $this->cleanString($row[11] ?? null),
                 'address_3' => $this->cleanString($row[12] ?? null),
-                'phone' => $this->cleanString($row[13] ?? null),
+                'phone' => $phone,
                 'is_registered' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -226,6 +236,57 @@ class ImportRosters extends Command
         // trim + 空文字の場合はnull
         $cleaned = trim($value);
         return $cleaned === '' ? null : $cleaned;
+    }
+    
+    /**
+     * 郵便番号のバリデーション・整形
+     * 
+     * @param string|null $value
+     * @return string|null
+     */
+    private function validateAndCleanPostalCode(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $cleaned = trim($value);
+
+        // # で始まる場合は無効（Excelエラー値）
+        if (strpos($cleaned, '#') !== false) {
+            return null;
+        }
+
+        // 全角数字・全角ハイフンを半角に変換
+        $cleaned = mb_convert_kana($cleaned, 'n', 'UTF-8');
+
+        // スペースを除去
+        $cleaned = str_replace([' ', '　'], '', $cleaned);
+
+        // ハイフンの重複をチェック
+        $hyphenCount = substr_count($cleaned, '-');
+        
+        if ($hyphenCount > 1) {
+            // ハイフンが2個以上ある場合は無効
+            return null;
+        }
+
+        // 形式チェック：XXX-XXXX または XXXXXXX
+        if ($hyphenCount === 1) {
+            // ハイフンあり：XXX-XXXX 形式（7-8文字）
+            if (preg_match('/^\d{3}-\d{4}$/', $cleaned)) {
+                return $cleaned;
+            } else {
+                return null;
+            }
+        } else {
+            // ハイフンなし：7〜8文字の数字
+            if (preg_match('/^\d{7,8}$/', $cleaned)) {
+                return $cleaned;
+            } else {
+                return null;
+            }
+        }
     }
     
     /**

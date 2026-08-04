@@ -220,6 +220,9 @@
                                 @else
                                     <span class="badge bg-secondary">未登録</span>
                                 @endif
+                                @if(str_contains((string)($roster->role_1 ?? ''), '常任理事'))
+                                    <span class="badge bg-warning text-dark ms-1">常任理事</span>
+                                @endif
                             </td>
                         </tr>
                     @empty

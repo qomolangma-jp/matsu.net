@@ -109,107 +109,115 @@ class ReferenceRosterController extends Controller
         $syncResult = [];
 
         try {
-            DB::transaction(function () use (
-                $request,
-                $user,
-                &$totalCount,
-                &$successCount,
-                &$errorCount,
-                &$skippedCount,
-                &$syncResult
-            ) {
-                // テーブルクリア
-                if ($request->has('truncate') && $request->input('truncate') == '1') {
-                    DB::table('reference_rosters')->truncate();
-                    Log::info('参照名簿テーブルをクリア', ['user_id' => $user->id]);
-                }
+            // テーブルクリア（トランザクション外で実行）
+            if ($request->has('truncate') && $request->input('truncate') == '1') {
+                DB::table('reference_rosters')->truncate();
+                Log::info('参照名簿テーブルをクリア', ['user_id' => $user->id]);
+            }
 
-                // CSVファイルを取得
-                $file = $request->file('csv_file');
-                $handle = fopen($file->getRealPath(), 'r');
+            // 既存データをメモリに読み込む（重複判定用）
+            $existingData = DB::table('reference_rosters')
+                ->select('graduation_term', 'name', 'gender')
+                ->get()
+                ->map(function ($item) {
+                    return $this->buildDuplicateKey([
+                        'graduation_term' => $item->graduation_term,
+                        'name' => $item->name,
+                        'gender' => $item->gender,
+                    ]);
+                })
+                ->flip()
+                ->all();
 
-                if ($handle === false) {
-                    throw new \Exception('CSVファイルを開けません');
-                }
+            // CSVファイルを取得
+            $file = $request->file('csv_file');
+            $handle = fopen($file->getRealPath(), 'r');
 
-                // 文字コード自動検出
-                $firstLine = fgets($handle);
-                rewind($handle);
+            if ($handle === false) {
+                throw new \Exception('CSVファイルを開けません');
+            }
 
-                $encoding = mb_detect_encoding($firstLine, ['UTF-8', 'SJIS', 'EUC-JP', 'ASCII'], true);
+            // 文字コード自動検出
+            $firstLine = fgets($handle);
+            rewind($handle);
 
-                if ($encoding && $encoding !== 'UTF-8') {
-                    stream_filter_prepend($handle, "convert.iconv.{$encoding}/UTF-8");
-                }
+            $encoding = mb_detect_encoding($firstLine, ['UTF-8', 'SJIS', 'EUC-JP', 'ASCII'], true);
 
-                // ヘッダー行をスキップ
-                fgetcsv($handle);
+            if ($encoding && $encoding !== 'UTF-8') {
+                stream_filter_prepend($handle, "convert.iconv.{$encoding}/UTF-8");
+            }
 
-                // データ処理（チャンク処理）
-                $chunk = [];
-                $chunkSize = 1000;
-                $lineNumber = 1;
-                $seenKeys = [];
+            // ヘッダー行をスキップ
+            fgetcsv($handle);
 
-                while (($row = fgetcsv($handle)) !== false) {
-                    $lineNumber++;
+            // データ処理（チャンク処理）
+            $chunk = [];
+            $chunkSize = 500;  // ローカル環境でのタイムアウト対策：チャンクサイズを縮小
+            $lineNumber = 1;
+            $seenKeys = [];
 
-                    // 空行をスキップ（すべての列が空またはnull）
-                    $hasData = false;
-                    foreach ($row as $cell) {
-                        if (isset($cell) && trim($cell) !== '') {
-                            $hasData = true;
-                            break;
-                        }
+            while (($row = fgetcsv($handle)) !== false) {
+                $lineNumber++;
+
+                // 空行をスキップ（すべての列が空またはnull）
+                $hasData = false;
+                foreach ($row as $cell) {
+                    if (isset($cell) && trim($cell) !== '') {
+                        $hasData = true;
+                        break;
                     }
+                }
 
-                    if (!$hasData) {
-                        continue; // 空行はカウントもスキップ
-                    }
+                if (!$hasData) {
+                    continue; // 空行はカウントもスキップ
+                }
 
-                    $totalCount++;
+                $totalCount++;
 
-                    // データ行が14列未満の場合はスキップ
-                    if (count($row) < 14) {
-                        $errorCount++;
-                        Log::warning("参照名簿CSVインポート: 列数不足", [
-                            'line' => $lineNumber,
-                            'columns' => count($row),
-                        ]);
+                // データ行が14列未満の場合はスキップ
+                if (count($row) < 14) {
+                    $errorCount++;
+                    Log::warning("参照名簿CSVインポート: 列数不足", [
+                        'line' => $lineNumber,
+                        'columns' => count($row),
+                    ]);
+                    continue;
+                }
+
+                // データを配列に変換
+                $data = $this->parseRow($row);
+
+                if ($data) {
+                    $duplicateKey = $this->buildDuplicateKey($data);
+
+                    // メモリ内での重複判定
+                    if (isset($existingData[$duplicateKey]) || isset($seenKeys[$duplicateKey])) {
+                        $skippedCount++;
                         continue;
                     }
 
-                    // データを配列に変換
-                    $data = $this->parseRow($row);
+                    $seenKeys[$duplicateKey] = true;
+                    $chunk[] = $data;
 
-                    if ($data) {
-                        $duplicateKey = $this->buildDuplicateKey($data);
-
-                        if ($this->isDuplicateReferenceRoster($data, $duplicateKey, $seenKeys)) {
-                            $skippedCount++;
-                            continue;
-                        }
-
-                        $chunk[] = $data;
-
-                        // チャンクサイズに達したらバルクインサート
-                        if (count($chunk) >= $chunkSize) {
-                            DB::table('reference_rosters')->insert($chunk);
-                            $successCount += count($chunk);
-                            $chunk = [];
-                        }
+                    // チャンクサイズに達したらバルクインサート
+                    if (count($chunk) >= $chunkSize) {
+                        DB::table('reference_rosters')->insert($chunk);
+                        $successCount += count($chunk);
+                        $chunk = [];
                     }
                 }
+            }
 
-                // 残りのチャンクをインサート
-                if (!empty($chunk)) {
-                    DB::table('reference_rosters')->insert($chunk);
-                    $successCount += count($chunk);
-                }
+            // 残りのチャンクをインサート
+            if (!empty($chunk)) {
+                DB::table('reference_rosters')->insert($chunk);
+                $successCount += count($chunk);
+            }
 
-                fclose($handle);
+            fclose($handle);
 
-                // 参照名簿同期を実行
+            // 参照名簿同期を実行（トランザクション内で実行）
+            DB::transaction(function () use (&$syncResult) {
                 $syncResult = app(ReferenceRosterSyncService::class)->syncExistingUsers();
             });
 
@@ -249,6 +257,16 @@ class ReferenceRosterController extends Controller
      */
     private function parseRow(array $row): array
     {
+        $phone = $this->cleanString($row[13] ?? null);
+        
+        // 電話番号が30文字を超える場合はnullで保存（DBスキーマの制限に対応）
+        if ($phone && mb_strlen($phone, 'UTF-8') > 30) {
+            $phone = null;
+        }
+        
+        // 郵便番号のバリデーション・整形
+        $postalCode = $this->validateAndCleanPostalCode($this->cleanString($row[9] ?? null));
+        
         return [
             'graduation_term' => $this->cleanString($row[0] ?? ''),
             'name' => $this->cleanString($row[1] ?? ''),
@@ -259,11 +277,11 @@ class ReferenceRosterController extends Controller
             'former_name' => $this->cleanString($row[6] ?? null),
             'kana' => $this->cleanString($row[7] ?? null),
             'notes' => $this->cleanString($row[8] ?? null),
-            'postal_code' => $this->cleanString($row[9] ?? null),
+            'postal_code' => $postalCode,
             'address_1' => $this->cleanString($row[10] ?? null),
             'address_2' => $this->cleanString($row[11] ?? null),
             'address_3' => $this->cleanString($row[12] ?? null),
-            'phone' => $this->cleanString($row[13] ?? null),
+            'phone' => $phone,
             'is_registered' => false,
             'created_at' => now(),
             'updated_at' => now(),
@@ -325,6 +343,57 @@ class ReferenceRosterController extends Controller
 
         $cleaned = trim($value);
         return $cleaned === '' ? null : $cleaned;
+    }
+
+    /**
+     * 郵便番号のバリデーション・整形
+     * 
+     * @param string|null $value
+     * @return string|null
+     */
+    private function validateAndCleanPostalCode(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $cleaned = trim($value);
+
+        // # で始まる場合は無効（Excelエラー値）
+        if (strpos($cleaned, '#') !== false) {
+            return null;
+        }
+
+        // 全角数字・全角ハイフンを半角に変換
+        $cleaned = mb_convert_kana($cleaned, 'n', 'UTF-8');
+
+        // スペースを除去
+        $cleaned = str_replace([' ', '　'], '', $cleaned);
+
+        // ハイフンの重複をチェック
+        $hyphenCount = substr_count($cleaned, '-');
+        
+        if ($hyphenCount > 1) {
+            // ハイフンが2個以上ある場合は無効
+            return null;
+        }
+
+        // 形式チェック：XXX-XXXX または XXXXXXX
+        if ($hyphenCount === 1) {
+            // ハイフンあり：XXX-XXXX 形式（7-8文字）
+            if (preg_match('/^\d{3}-\d{4}$/', $cleaned)) {
+                return $cleaned;
+            } else {
+                return null;
+            }
+        } else {
+            // ハイフンなし：7〜8文字の数字
+            if (preg_match('/^\d{7,8}$/', $cleaned)) {
+                return $cleaned;
+            } else {
+                return null;
+            }
+        }
     }
 
     /**

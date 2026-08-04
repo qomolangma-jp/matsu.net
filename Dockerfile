@@ -15,6 +15,13 @@ RUN apt-get update && apt-get install -y \
 # Composerのインストール
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# PHP設定（タイムアウト対応）
+RUN echo 'max_execution_time = 300' >> /usr/local/etc/php/php.ini \
+    && echo 'max_input_time = 300' >> /usr/local/etc/php/php.ini \
+    && echo 'memory_limit = 512M' >> /usr/local/etc/php/php.ini \
+    && echo 'upload_max_filesize = 100M' >> /usr/local/etc/php/php.ini \
+    && echo 'post_max_size = 100M' >> /usr/local/etc/php/php.ini
+
 # Apache設定
 RUN a2enmod rewrite
 
