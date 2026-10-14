@@ -416,7 +416,7 @@ class EventController extends Controller
             // データ行
             foreach ($attendances as $attendance) {
                 $user = $attendance->user;
-                fputcsv($file, [
+                fputcsv($file, \App\Support\CsvSanitizer::row([
                     $user->id,
                     $user->full_name,
                     $user->last_name_kana . ' ' . $user->first_name_kana,
@@ -426,7 +426,7 @@ class EventController extends Controller
                     $attendance->status_label,
                     $attendance->note,
                     $attendance->created_at?->format('Y-m-d H:i'),
-                ]);
+                ]));
             }
 
             fclose($file);

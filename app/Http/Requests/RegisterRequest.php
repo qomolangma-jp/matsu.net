@@ -15,6 +15,16 @@ class RegisterRequest extends FormRequest
     }
 
     /**
+     * ローカル以外では、フォーム入力ではなく検証済みのLINE IDを使う（なりすまし防止）
+     */
+    protected function prepareForValidation(): void
+    {
+        if (config('app.env') !== 'local') {
+            $this->merge(['line_id' => $this->session()->get('verified_line_id')]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>

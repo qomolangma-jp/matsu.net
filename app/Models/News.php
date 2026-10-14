@@ -124,16 +124,17 @@ class News extends Model
             return '';
         }
 
-        $body = $this->body;
+        // 先にHTMLエスケープしてからリンク化する（保存型XSS対策）
+        $body = e($this->body);
         
         // http(s)://で始まるURLパターンをマッチング
         $pattern = '/https?:\/\/[^\s\)]+/i';
         
         $body = preg_replace_callback($pattern, function($matches) {
-            $url = $matches[0];
-            // URLの末尾の句読点を除外
+            // 末尾の句読点を除外（エスケープ済みのため &quot; 等の実体参照も除く）
+            $url = preg_replace('/(&(quot|#039|lt|gt);.*)$/', '', $matches[0]);
             $url = rtrim($url, '.,!?;:）');
-            return '<a href="' . htmlspecialchars($url) . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($url) . '</a>';
+            return '<a href="' . $url . '" target="_blank" rel="noopener noreferrer">' . $url . '</a>';
         }, $body);
         
         return $body;

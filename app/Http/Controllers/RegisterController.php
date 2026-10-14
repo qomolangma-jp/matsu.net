@@ -57,8 +57,10 @@ class RegisterController extends Controller
             return view('register-closed', compact('message'));
         }
 
-        // /auth/line から引き継いだ line_id（未登録ユーザー）
-        $lineId = $request->input('line_id', '');
+        // /auth/line で検証済みの line_id（未登録ユーザー）
+        $lineId = config('app.env') === 'local'
+            ? $request->input('line_id', '')
+            : $request->session()->get('verified_line_id', '');
 
         // アクティブな地区会カテゴリーを取得
         $categories = Category::where('type', 'district')
@@ -76,14 +78,24 @@ class RegisterController extends Controller
      * - 既存ユーザー → 自動ログイン → マイページ（または管理画面）
      * - 未登録       → 登録フォームへ（line_id をクエリに引き継ぐ）
      */
-    public function authWithLine(Request $request)
+    public function authWithLine(Request $request, \App\Services\LineIdTokenVerifier $verifier)
     {
-        $lineId   = $request->input('line_id');
         $redirect = $request->input('redirect', '');
         $safePath = preg_match('#^/(events|news)/\d+$#', $redirect) ? $redirect : '/mypage';
 
+        // ローカル環境以外では、LINEが署名したIDトークンから検証したIDのみを信頼する
+        if (config('app.env') === 'local') {
+            $lineId = $request->input('line_id');
+        } else {
+            $lineId = $verifier->verify($request->input('id_token'));
+            if (!$lineId) {
+                Log::warning('authWithLine: IDトークン検証失敗', ['ip' => $request->ip()]);
+                return redirect()->route('register.form')
+                    ->with('error', 'LINE認証に失敗しました。LINEアプリから開き直してください。');
+            }
+        }
+
         Log::info('authWithLine アクセス', [
-            'line_id' => $lineId,
             'redirect' => $redirect,
             'session_id' => $request->session()->getId(),
         ]);
@@ -118,8 +130,9 @@ class RegisterController extends Controller
         }
 
         Log::info('LIFF：未登録ユーザーのため登録フォームへ', ['line_id' => $lineId]);
-        // 未登録：登録フォームへ（line_id を引き継ぐ）
-        return redirect()->route('register.form', ['line_id' => $lineId]);
+        // 未登録：検証済みのLINE IDをセッションに保持して登録フォームへ（URLでは引き継がない）
+        $request->session()->put('verified_line_id', $lineId);
+        return redirect()->route('register.form');
     }
 
     /**
@@ -177,7 +190,7 @@ class RegisterController extends Controller
                 }
             }
 
-            $this->applyRosterBasedPermissions($user, $matchResult['matched_roster']);
+            // 管理者権限（学年管理者）は名簿との一致だけでは付与しない。管理者が承認時に手動で付与する。
 
             // 完全一致の場合は自動承認
             if ($matchResult['status'] === 'approved') {
@@ -269,6 +282,17 @@ class RegisterController extends Controller
         // 完全一致が1件のみの場合は自動承認
         if ($exactMatches->count() === 1) {
             $matched = $exactMatches->first();
+
+            // 常任理事など管理権限に関わる名簿は、入力情報の一致だけでは承認せず管理者が確認する
+            if (str_contains((string) ($matched->role_1 ?? ''), '常任理事')) {
+                Log::info('参照名簿と一致（常任理事のため手動承認）', ['matched_id' => $matched->id]);
+
+                return [
+                    'status' => 'pending',
+                    'match_type' => 'exact',
+                    'matched_roster' => $matched,
+                ];
+            }
             
             Log::info('参照名簿と完全一致（自動承認）', [
                 'matched_id' => $matched->id,
@@ -309,26 +333,6 @@ class RegisterController extends Controller
             'match_type' => 'none',
             'matched_roster' => null,
         ];
-    }
-
-    private function applyRosterBasedPermissions(User $user, ?ReferenceRoster $matchedRoster): void
-    {
-        if (!$matchedRoster) {
-            return;
-        }
-
-        $shouldGrantYearAdmin = str_contains((string) ($matchedRoster->role_1 ?? ''), '常任理事');
-
-        if (!$shouldGrantYearAdmin) {
-            return;
-        }
-
-        $user->update([
-            'role' => 'year_admin',
-            'approval_status' => 'approved',
-            'approved_at' => now(),
-            'approval_note' => '参照名簿の役職情報により学年管理者として自動承認',
-        ]);
     }
 
     /**

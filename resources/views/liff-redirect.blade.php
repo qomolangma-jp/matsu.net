@@ -66,16 +66,13 @@
             .then(function () {
                 // LIFFセッションがあれば毎回 /auth/line を通してサーバー側のログイン状態を確定させる
                 if (liff.isLoggedIn()) {
-                    return liff.getProfile()
-                        .then(function (profile) {
-                            sessionStorage.removeItem(SESSION_KEY);
-                            var lineId   = profile.userId;
-                            var redirect = destPath || '/mypage';
-                            window.location.replace(
-                                AUTH_LINE_URL + '?line_id=' + encodeURIComponent(lineId)
-                                + '&redirect=' + encodeURIComponent(redirect)
-                            );
-                        });
+                    var idToken = liff.getIDToken();
+                    sessionStorage.removeItem(SESSION_KEY);
+                    var redirect = destPath || '/mypage';
+                    window.location.replace(
+                        AUTH_LINE_URL + '?id_token=' + encodeURIComponent(idToken || '')
+                        + '&redirect=' + encodeURIComponent(redirect)
+                    );
                 } else {
                     // LIFF未ログイン → LINE OAuthを起動（戻り後に同ページを再レンダリング）
                     liff.login({ redirectUri: LOGIN_RETURN_URL });

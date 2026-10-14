@@ -234,13 +234,10 @@ window.onload = async function() {
         setStatus('⏳ <b>プロフィール取得中...</b>', 'info');
 
         const profile = await liff.getProfile();
-        document.getElementById('lineId').value = profile.userId;
+        setStatus('✅ <b>LINE認証OK</b><br>displayName: ' + profile.displayName, 'success');
 
-        setStatus('✅ <b>LINE ID取得成功！</b><br>userId: <code>' + profile.userId + '</code><br>displayName: ' + profile.displayName, 'success');
-        console.log('LINE User ID:', profile.userId);
-
-        // 既存ユーザーチェック → サーバー側で振り分け
-        window.location.href = '/auth/line?line_id=' + encodeURIComponent(profile.userId);
+        // 既存ユーザーチェック → サーバー側でIDトークンを検証して振り分け
+        window.location.href = '/auth/line?id_token=' + encodeURIComponent(liff.getIDToken() || '');
 
     } catch (err) {
         setStatus('❌ <b>エラー: ' + err.message + '</b>', 'error');

@@ -103,7 +103,7 @@ class ReferenceRosterImportTest extends BaseTestCase
         $this->assertSame(1, ReferenceRoster::count());
     }
 
-    public function test_import_triggers_auto_approval_and_year_admin_for_matching_user(): void
+    public function test_import_does_not_auto_approve_or_grant_year_admin_for_executive_roster(): void
     {
         $admin = User::create([
             'name' => '管理者',
@@ -138,19 +138,17 @@ class ReferenceRosterImportTest extends BaseTestCase
             ]);
 
         $response->assertRedirect(route('admin.reference_rosters.index'));
-        $this->assertStringContainsString('自動承認', session('success'));
-        $this->assertStringContainsString('学年管理者', session('success'));
 
         $user->refresh();
         $roster = ReferenceRoster::query()->where('name', 'テスト 太郎')->first();
 
         $this->assertNotNull($roster);
-        $this->assertSame('approved', $user->approval_status);
-        $this->assertSame('year_admin', $user->role);
-        $this->assertTrue($roster->is_registered);
+        $this->assertSame('pending', $user->approval_status);
+        $this->assertSame('general', $user->role);
+        $this->assertFalse($roster->is_registered);
     }
 
-    public function test_sync_command_approves_existing_user_and_grants_year_admin_for_executive_roster(): void
+    public function test_sync_command_does_not_approve_or_grant_year_admin_for_executive_roster(): void
     {
         $user = User::create([
             'name' => '既存ユーザー',
@@ -180,8 +178,8 @@ class ReferenceRosterImportTest extends BaseTestCase
         $user->refresh();
         $roster->refresh();
 
-        $this->assertSame('approved', $user->approval_status);
-        $this->assertSame('year_admin', $user->role);
-        $this->assertTrue($roster->is_registered);
+        $this->assertSame('pending', $user->approval_status);
+        $this->assertSame('general', $user->role);
+        $this->assertFalse($roster->is_registered);
     }
 }

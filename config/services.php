@@ -38,6 +38,8 @@ return [
     'line' => [
         'messaging_channel_access_token' => env('LINE_MESSAGING_CHANNEL_ACCESS_TOKEN'),
         'liff_id' => env('LIFF_ID'),
+        // LIFFアプリを紐付けているLINEログインチャネルのID（IDトークン検証用）
+        'login_channel_id' => env('LINE_LOGIN_CHANNEL_ID'),
     ],
 
 ];

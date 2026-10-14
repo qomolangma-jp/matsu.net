@@ -58,7 +58,7 @@ Route::get('/admin', function () {
     return redirect()->route('admin.login.form');
 });
 Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('admin.login.form');
-Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login');
+Route::post('/admin/login', [LoginController::class, 'login'])->middleware('throttle:10,1')->name('admin.login');
 Route::post('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
 
 // ログイン画面（デフォルトリダイレクト用）
@@ -70,7 +70,7 @@ Route::get('/login', function () {
 Route::get('/register', [RegisterController::class, 'showForm'])->name('register.form');
 
 // LIFF LINE ID チェック：既存ユーザーなら自動ログイン、未登録ならそのまま登録画面へ
-Route::get('/auth/line', [RegisterController::class, 'authWithLine'])->name('auth.line');
+Route::get('/auth/line', [RegisterController::class, 'authWithLine'])->middleware('throttle:30,1')->name('auth.line');
 
 // 新規登録処理（LIFF経由）
 Route::post('/register', [RegisterController::class, 'store'])->name('register.submit');

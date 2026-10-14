@@ -157,7 +157,7 @@ class UserManagementController extends Controller
 
             // データ行
             foreach ($users as $user) {
-                fputcsv($file, [
+                fputcsv($file, \App\Support\CsvSanitizer::row([
                     $user->id,
                     $user->graduation_year,
                     $user->graduation_year - 1947,
@@ -178,7 +178,7 @@ class UserManagementController extends Controller
                     $user->approved_at?->format('Y-m-d H:i'),
                     $user->approver?->full_name,
                     $user->created_at?->format('Y-m-d H:i'),
-                ]);
+                ]));
             }
 
             fclose($file);

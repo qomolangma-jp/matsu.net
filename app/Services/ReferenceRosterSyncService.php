@@ -27,6 +27,11 @@ class ReferenceRosterSyncService
                 continue;
             }
 
+            // 常任理事の名簿は入力情報の一致だけでは承認・権限付与せず、管理者が手動で確認する
+            if ($this->isPrivilegedRoster($targetRoster)) {
+                continue;
+            }
+
             $updateData = [];
             $shouldApprove = false;
             $shouldGrantYearAdmin = false;
@@ -36,11 +41,6 @@ class ReferenceRosterSyncService
                 $updateData['approved_at'] = now();
                 $updateData['approval_note'] = '参照名簿照合により自動承認';
                 $shouldApprove = true;
-            }
-
-            if ($this->shouldGrantYearAdmin($targetRoster) && $user->role !== 'year_admin') {
-                $updateData['role'] = 'year_admin';
-                $shouldGrantYearAdmin = true;
             }
 
             if (!empty($updateData)) {
@@ -108,7 +108,7 @@ class ReferenceRosterSyncService
             });
     }
 
-    private function shouldGrantYearAdmin(ReferenceRoster $roster): bool
+    private function isPrivilegedRoster(ReferenceRoster $roster): bool
     {
         return str_contains((string) ($roster->role_1 ?? ''), '常任理事');
     }
