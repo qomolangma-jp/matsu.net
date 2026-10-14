@@ -114,11 +114,23 @@
             <select name="bulk_action" id="bulkActionSelect" class="form-select form-select-sm" style="width: 180px;">
                 <option value="">一括操作を選択</option>
                 <option value="approve">承認済みに変更</option>
+                <option value="add_category">ステータスを追加</option>
+                <option value="remove_category">ステータスを削除</option>
                 @if(!$isYearAdmin)
                     <option value="set_role_year_admin">権限を学年管理者へ変更</option>
                     <option value="set_role_general">権限を一般ユーザーへ変更</option>
                 @endif
                 <option value="delete">削除</option>
+            </select>
+            <select name="category_id" id="bulkCategorySelect" class="form-select form-select-sm d-none" style="width: 200px;">
+                <option value="">ステータスを選択</option>
+                @foreach($categories as $category)
+                    @if(!$isYearAdmin || $category->type !== 'role')
+                        <option value="{{ $category->id }}">
+                            [{{ $category->type === 'role' ? '役職' : ($category->type === 'district' ? '地区会' : 'その他') }}] {{ $category->name }}
+                        </option>
+                    @endif
+                @endforeach
             </select>
             <button type="submit" class="btn btn-sm btn-primary" id="bulkActionSubmit">
                 実行
@@ -279,6 +291,17 @@
 <script>
 const bulkActionForm = document.getElementById('bulkActionForm');
 const bulkActionSelect = document.getElementById('bulkActionSelect');
+const bulkCategorySelect = document.getElementById('bulkCategorySelect');
+
+if (bulkActionSelect && bulkCategorySelect) {
+    bulkActionSelect.addEventListener('change', function () {
+        const needsCategory = ['add_category', 'remove_category'].includes(bulkActionSelect.value);
+        bulkCategorySelect.classList.toggle('d-none', !needsCategory);
+        if (!needsCategory) {
+            bulkCategorySelect.value = '';
+        }
+    });
+}
 const selectAllUsers = document.getElementById('selectAllUsers');
 let isBulkActionSubmitting = false;
 
@@ -334,6 +357,16 @@ if (bulkActionForm) {
         }
         if (bulkActionSelect.value === 'set_role_general') {
             message = `${selectedUsers.length}名の権限を一般ユーザーへ変更します。よろしいですか？`;
+        }
+        if (['add_category', 'remove_category'].includes(bulkActionSelect.value)) {
+            if (!bulkCategorySelect.value) {
+                event.preventDefault();
+                alert('ステータスを選択してください。');
+                return;
+            }
+            const categoryName = bulkCategorySelect.options[bulkCategorySelect.selectedIndex].text.trim();
+            const verb = bulkActionSelect.value === 'add_category' ? '追加' : '削除';
+            message = `${selectedUsers.length}名のステータス「${categoryName}」を${verb}します。よろしいですか？`;
         }
 
         if (!confirm(message)) {

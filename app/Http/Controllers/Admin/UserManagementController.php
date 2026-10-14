@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -285,6 +286,13 @@ class UserManagementController extends Controller
             $categories = $validated['categories'] ?? [];
             unset($validated['categories']);
 
+            // 役職カテゴリーはマスター管理者のみ変更可能（それ以外は現状維持）
+            if ($admin->role !== 'master_admin') {
+                $categories = Category::whereIn('id', $categories)->where('type', '!=', 'role')->pluck('id')->all();
+                $keptRoleIds = $user->categories()->where('categories.type', 'role')->pluck('categories.id')->all();
+                $categories = array_merge($categories, $keptRoleIds);
+            }
+
             // LINE IDのクリア
             if ($request->boolean('clear_line_id')) {
                 $validated['line_id'] = null;
@@ -502,14 +510,25 @@ class UserManagementController extends Controller
         }
 
         $allowedActions = $admin->role === 'master_admin'
-            ? 'approve,delete,set_role_year_admin,set_role_general'
-            : 'approve,delete';
+            ? 'approve,delete,set_role_year_admin,set_role_general,add_category,remove_category'
+            : 'approve,delete,add_category,remove_category';
 
         $validated = $request->validate([
             'bulk_action' => 'required|in:' . $allowedActions,
             'selected_user_ids' => 'required|array|min:1',
             'selected_user_ids.*' => 'integer|exists:users,id',
+            'category_id' => 'required_if:bulk_action,add_category,remove_category|nullable|integer|exists:categories,id',
         ]);
+
+        $bulkCategory = null;
+        if (in_array($validated['bulk_action'], ['add_category', 'remove_category'], true)) {
+            $bulkCategory = Category::findOrFail($validated['category_id']);
+            if ($bulkCategory->type === 'role' && $admin->role !== 'master_admin') {
+                return redirect()
+                    ->route('admin.users.index')
+                    ->with('error', '役職の変更はマスター管理者のみ実行できます。');
+            }
+        }
 
         if (in_array($validated['bulk_action'], ['set_role_year_admin', 'set_role_general'], true)
             && $admin->role !== 'master_admin') {
@@ -541,6 +560,35 @@ class UserManagementController extends Controller
 
         DB::beginTransaction();
         try {
+            if ($bulkCategory) {
+                $isAdd = $validated['bulk_action'] === 'add_category';
+
+                foreach ($targetUsers as $user) {
+                    if ($isAdd) {
+                        $user->categories()->syncWithoutDetaching([
+                            $bulkCategory->id => ['assigned_at' => now(), 'assigned_by' => $admin->id],
+                        ]);
+                    } else {
+                        $user->categories()->detach($bulkCategory->id);
+                    }
+                    $processed++;
+                }
+
+                DB::commit();
+
+                Log::info('Bulk category update completed', [
+                    'action' => $validated['bulk_action'],
+                    'category_id' => $bulkCategory->id,
+                    'updated_count' => $processed,
+                    'admin_id' => $admin->id,
+                ]);
+
+                $verb = $isAdd ? '追加' : '削除';
+                return redirect()
+                    ->route('admin.users.index')
+                    ->with('success', "{$processed}名のステータス「{$bulkCategory->name}」を{$verb}しました。");
+            }
+
             if ($validated['bulk_action'] === 'approve') {
                 foreach ($targetUsers as $user) {
                     $user->update([

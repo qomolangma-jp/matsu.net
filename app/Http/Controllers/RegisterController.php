@@ -166,6 +166,8 @@ class RegisterController extends Controller
             // カテゴリーを割り当て
             if ($request->has('categories') && is_array($request->categories)) {
                 $categoryIds = array_filter($request->categories, fn($id) => is_numeric($id));
+                // 役職カテゴリー（常任理事など）は登録時に自己付与できない
+                $categoryIds = Category::whereIn('id', $categoryIds)->where('type', 'district')->pluck('id')->all();
                 if (!empty($categoryIds)) {
                     $user->categories()->sync($categoryIds);
                     Log::info('ユーザーにカテゴリーを割り当て', [

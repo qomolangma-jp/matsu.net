@@ -280,6 +280,7 @@
                         <label class="form-label">カテゴリー</label>
                         <div class="row">
                             @forelse($categories as $category)
+                                @php $roleLocked = $category->type === 'role' && Auth::user()->role !== 'master_admin'; @endphp
                                 <div class="col-md-6 col-lg-4">
                                     <div class="form-check">
                                         <input class="form-check-input" 
@@ -287,6 +288,7 @@
                                                name="categories[]" 
                                                value="{{ $category->id }}" 
                                                id="category{{ $category->id }}"
+                                               {{ $roleLocked ? 'disabled' : '' }}
                                                {{ in_array($category->id, old('categories', $user->categories->pluck('id')->toArray())) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="category{{ $category->id }}">
                                             {{ $category->name }}
@@ -304,7 +306,7 @@
                                 </div>
                             @endforelse
                         </div>
-                        <small class="text-muted">複数選択可能です。カテゴリーの追加は<a href="{{ route('admin.categories.index') }}" target="_blank">カテゴリー管理</a>から行えます。</small>
+                        <small class="text-muted">複数選択可能です。役職（常任理事など）はマスター管理者のみ変更できます。カテゴリーの追加は<a href="{{ route('admin.categories.index') }}" target="_blank">カテゴリー管理</a>から行えます。</small>
                     </div>
 
                     <!-- 権限 -->

@@ -27,6 +27,9 @@
         <i class="bi bi-newspaper"></i> ニュース管理
     </a>
     @if(Auth::check() && Auth::user()->role === 'master_admin')
+        <a class="nav-link text-white {{ request()->routeIs('admin.registration-status.*') ? 'active' : '' }}" href="{{ route('admin.registration-status.index') }}">
+            <i class="bi bi-bar-chart"></i> 登録状況
+        </a>
         <a class="nav-link text-white {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}">
             <i class="bi bi-gear"></i> 設定
         </a>
