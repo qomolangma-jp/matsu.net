@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\Category;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Services\LineMessagingService;
@@ -34,7 +35,9 @@ class EventController extends Controller
         }
 
         $query = Event::with('creator')
-            ->withCount('lineNotificationLogs as line_sent_count')
+            ->withCount(['lineNotificationLogs as line_sent_count' => function ($query) {
+                $query->where('is_test', false);
+            }])
             ->filterByPermission($user);
 
         // ステータスフィルタ
@@ -64,7 +67,9 @@ class EventController extends Controller
 
         $graduationYears = $this->getGraduationYearsList($user);
 
-        return view('admin.events.create', compact('graduationYears'));
+        $categories = Category::active()->orderBy('display_order')->orderBy('name')->get();
+
+        return view('admin.events.create', compact('graduationYears', 'categories'));
     }
 
     /**
@@ -89,6 +94,8 @@ class EventController extends Controller
             'graduation_year' => 'nullable|integer|min:1948',
             'target_roles' => 'nullable|array',
             'target_roles.*' => 'in:year_admin',
+            'target_category_ids' => 'nullable|array',
+            'target_category_ids.*' => 'integer|exists:categories,id',
             'is_published' => 'boolean',
             'send_line_notification' => 'boolean',
         ]);
@@ -126,7 +133,11 @@ class EventController extends Controller
             // LINE通知送信
             $lineMsg = '';
             if ($request->boolean('send_line_notification') && $request->boolean('is_published')) {
-                $result = $this->lineService->sendNotification($event, false);
+                $result = $this->lineService->sendNotification(
+                    $event,
+                    false,
+                    $request->input('target_category_ids', [])
+                );
                 $lineMsg = "LINE通知: {$result['success_count']}件送信";
                 if ($result['failure_count'] > 0) {
                     $lineMsg .= "（{$result['failure_count']}件失敗）";
@@ -206,7 +217,7 @@ class EventController extends Controller
         ];
 
         // LINE送信件数
-        $lineSentCount = $event->lineNotificationLogs()->distinct('user_id')->count('user_id');
+        $lineSentCount = $event->lineNotificationLogs()->where('is_test', false)->distinct('user_id')->count('user_id');
 
         return view('admin.events.show', compact(
             'event',
@@ -238,18 +249,26 @@ class EventController extends Controller
         $graduationYears = $this->getGraduationYearsList($user);
 
         // LINE送信統計
-        $lineSentCount   = $event->lineNotificationLogs()->distinct('user_id')->count('user_id');
-        $targetUsersQuery = User::approved()->whereNotNull('line_id');
-        if (!empty($event->target_roles)) {
-            $targetUsersQuery->whereIn('role', $event->target_roles);
-        }
-        if ($event->graduation_year) {
-            $targetUsersQuery->where('graduation_year', $event->graduation_year);
-        }
+        $lineSentCount = $event->lineNotificationLogs()->where('is_test', false)->distinct('user_id')->count('user_id');
+        $targetUsersQuery = User::whereNotNull('line_id')
+            ->where(function ($query) use ($event) {
+                $query->where('role', 'master_admin')
+                    ->orWhere(function ($targetQuery) use ($event) {
+                        $targetQuery->approved();
+
+                        if (!empty($event->target_roles)) {
+                            $targetQuery->whereIn('role', $event->target_roles);
+                        }
+                        if ($event->graduation_year) {
+                            $targetQuery->where('graduation_year', $event->graduation_year);
+                        }
+                    });
+            });
         $lineTargetCount = $targetUsersQuery->count();
         $lineUnsentCount = max(0, $lineTargetCount - $lineSentCount);
+        $categories = Category::active()->orderBy('display_order')->orderBy('name')->get();
 
-        return view('admin.events.edit', compact('event', 'graduationYears', 'lineSentCount', 'lineTargetCount', 'lineUnsentCount'));
+        return view('admin.events.edit', compact('event', 'graduationYears', 'lineSentCount', 'lineTargetCount', 'lineUnsentCount', 'categories'));
     }
 
     /**
@@ -276,6 +295,8 @@ class EventController extends Controller
             'capacity'             => 'nullable|integer|min:1',
             'target_roles'         => 'nullable|array',
             'target_roles.*'       => 'in:year_admin',
+            'target_category_ids' => 'nullable|array',
+            'target_category_ids.*' => 'integer|exists:categories,id',
             'is_published'         => 'boolean',
             'send_line_to_unsent'  => 'nullable|boolean',
             'send_line_resend_all' => 'nullable|boolean',
@@ -302,11 +323,19 @@ class EventController extends Controller
             // LINE送信処理（更新時）
             $lineMsg = '';
             if ($request->boolean('send_line_resend_all')) {
-                $result  = $this->lineService->sendNotification($event, true);
+                $result  = $this->lineService->sendNotification(
+                    $event,
+                    true,
+                    $request->input('target_category_ids', [])
+                );
                 $lineMsg = "LINE再送: {$result['success_count']}件";
                 if ($result['failure_count'] > 0) { $lineMsg .= "（{$result['failure_count']}件失敗）"; }
             } elseif ($request->boolean('send_line_to_unsent')) {
-                $result  = $this->lineService->sendNotification($event, false);
+                $result  = $this->lineService->sendNotification(
+                    $event,
+                    false,
+                    $request->input('target_category_ids', [])
+                );
                 $lineMsg = "LINE送信: {$result['success_count']}件";
                 if ($result['failure_count'] > 0) { $lineMsg .= "（{$result['failure_count']}件失敗）"; }
             }
@@ -326,6 +355,35 @@ class EventController extends Controller
             ]);
 
             return back()->withErrors(['error' => 'イベントの更新に失敗しました。'])->withInput();
+        }
+    }
+
+    /**
+     * イベントLINE通知のテスト送信
+     */
+    public function sendTestLineNotification(Event $event)
+    {
+        $user = Auth::user();
+        if (!in_array($user->role, ['year_admin', 'master_admin'], true)) {
+            abort(403, '管理者権限が必要です。');
+        }
+
+        $this->ensureEventManageableByAdmin($user, $event, 'テスト送信');
+
+        try {
+            $this->lineService->sendTestEventNotification($event, $user);
+
+            return back()->with('success', 'ログイン中のユーザーにLINEテスト送信しました。');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['line_test' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            Log::error('イベントLINEテスト送信エラー', [
+                'event_id' => $event->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors(['line_test' => 'LINEテスト送信に失敗しました。']);
         }
     }
 

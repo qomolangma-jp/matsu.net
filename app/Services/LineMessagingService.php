@@ -36,24 +36,41 @@ class LineMessagingService
      * @param bool $resendAll true=全員へ再送（既送信含む）  false=未送信のみ
      * @return array ['success_count', 'failure_count', 'errors', 'target_count', 'line_count', 'email_count', 'remaining_line_quota']
      */
-    public function sendNotification($notifiable, bool $resendAll = false): array
+    public function sendNotification(
+        $notifiable,
+        bool $resendAll = false,
+        array $targetCategoryIds = []
+    ): array
     {
         // 対象ユーザーのベースクエリ（承認済み・LINE ID あり）
-        $usersQuery = User::approved()->whereNotNull('line_id');
+        $usersQuery = User::whereNotNull('line_id')
+            ->where(function ($query) use ($notifiable, $targetCategoryIds) {
+                $query->where('role', 'master_admin')
+                    ->orWhere(function ($targetQuery) use ($notifiable, $targetCategoryIds) {
+                        $targetQuery->approved();
 
-        if (!empty($notifiable->target_roles)) {
-            $usersQuery->whereIn('role', $notifiable->target_roles);
-        }
+                        if (!empty($notifiable->target_roles)) {
+                            $targetQuery->whereIn('role', $notifiable->target_roles);
+                        }
 
-        if ($notifiable instanceof News && !empty($notifiable->target_graduation_years)) {
-            $usersQuery->whereIn('graduation_year', $notifiable->target_graduation_years);
-        } elseif ($notifiable instanceof Event && $notifiable->graduation_year) {
-            $usersQuery->where('graduation_year', $notifiable->graduation_year);
-        }
+                        if ($notifiable instanceof News && !empty($notifiable->target_graduation_years)) {
+                            $targetQuery->whereIn('graduation_year', $notifiable->target_graduation_years);
+                        } elseif ($notifiable instanceof Event && $notifiable->graduation_year) {
+                            $targetQuery->where('graduation_year', $notifiable->graduation_year);
+                        }
+
+                        if ($notifiable instanceof Event && !empty($targetCategoryIds)) {
+                            $targetQuery->whereHas('categories', function ($categoryQuery) use ($targetCategoryIds) {
+                                $categoryQuery->whereIn('categories.id', $targetCategoryIds);
+                            });
+                        }
+                    });
+            });
 
         if (!$resendAll) {
             // 既送信ユーザーを除外
             $sentUserIds = $notifiable->lineNotificationLogs()
+                ->where('is_test', false)
                 ->pluck('user_id')
                 ->unique()
                 ->toArray();
@@ -149,6 +166,32 @@ class LineMessagingService
             'email_count'   => $emailCount,
             'remaining_line_quota' => max(0, $this->remainingCount),
         ];
+    }
+
+    /**
+     * ログイン中の管理者へイベント通知をテスト送信する
+     */
+    public function sendTestEventNotification(Event $event, User $user): void
+    {
+        if (!$user->line_id) {
+            throw new \RuntimeException('LINE IDが登録されていません。');
+        }
+
+        if (LineNotificationLog::getRemainingCount() <= 0) {
+            throw new \RuntimeException('LINEの月間送信上限に達しているため、テスト送信できません。');
+        }
+
+        if (!$this->sendPushMessage($user->line_id, $this->buildEventMessage($event))) {
+            throw new \RuntimeException('LINE APIへの送信に失敗しました。');
+        }
+
+        LineNotificationLog::create([
+            'notifiable_type' => Event::class,
+            'notifiable_id' => $event->id,
+            'user_id' => $user->id,
+            'notification_month' => Carbon::now()->format('Y-m'),
+            'is_test' => true,
+        ]);
     }
 
     /**
@@ -366,7 +409,7 @@ class LineMessagingService
             $text .= "締切：" . $event->deadline->format('Y年m月d日') . "\n";
         }
 
-        $text .= "\n" . mb_strimwidth($event->description, 0, 100, "...") . "\n\n";
+        $text .= "\n" . $event->description . "\n\n";
         $text .= "詳細・出欠回答はこちら▶︎ {$url}\n\n";
         $text .= "送信者：{$senderName}";
 

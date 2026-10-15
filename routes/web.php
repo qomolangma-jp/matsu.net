@@ -229,6 +229,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('/{event}', [AdminEventController::class, 'show'])->name('show');
         Route::get('/{event}/edit', [AdminEventController::class, 'edit'])->name('edit');
         Route::put('/{event}', [AdminEventController::class, 'update'])->name('update');
+        Route::post('/{event}/test-line', [AdminEventController::class, 'sendTestLineNotification'])->name('test-line');
         Route::delete('/{event}', [AdminEventController::class, 'destroy'])->name('destroy');
         Route::get('/{event}/export-attendances', [AdminEventController::class, 'exportAttendances'])->name('export-attendances');
     });

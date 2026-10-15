@@ -139,9 +139,9 @@
                                 <td>{{ $category->display_order }}</td>
                                 <td>
                                     @if($category->is_active)
-                                        <span class="badge bg-success">アクティブ</span>
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>有効</span>
                                     @else
-                                        <span class="badge bg-secondary">非アクティブ</span>
+                                        <span class="badge bg-danger"><i class="bi bi-pause-circle-fill me-1"></i>無効</span>
                                     @endif
                                 </td>
                                 <td>

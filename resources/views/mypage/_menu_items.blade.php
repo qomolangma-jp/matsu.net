@@ -32,6 +32,9 @@
             <a href="{{ route('admin.categories.index') }}" class="list-group-item list-group-item-action">
                 <i class="bi bi-diagram-3-fill me-2"></i> カテゴリー管理
             </a>
+            <a href="{{ route('admin.categories.create') }}" class="list-group-item list-group-item-action {{ request()->routeIs('admin.categories.create') ? 'active' : '' }}">
+                <i class="bi bi-plus-circle me-2"></i> カテゴリー作成
+            </a>
         @endif
         <a href="{{ route('admin.news.index') }}" class="list-group-item list-group-item-action">
             <i class="bi bi-newspaper me-2"></i> ニュース管理

@@ -12,9 +12,11 @@ class LineNotificationLog extends Model
         'notifiable_id',
         'user_id',
         'notification_month',
+        'is_test',
     ];
 
     protected $casts = [
+        'is_test' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

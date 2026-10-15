@@ -110,6 +110,11 @@ class User extends Authenticatable
             ->withPivot('assigned_at', 'assigned_by', 'notes');
     }
 
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
     /**
      * 地区会カテゴリーのみ取得
      */

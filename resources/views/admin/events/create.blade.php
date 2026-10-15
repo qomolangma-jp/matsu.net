@@ -149,8 +149,11 @@
                         @enderror
                     </div>
 
-                    @if(Auth::user()->role === 'master_admin')
-                        <div class="mb-3">
+                    <!-- LINE送信対象 -->
+                    <div class="mb-4 p-3 rounded border">
+                        <h6><i class="bi bi-funnel"></i> LINE送信対象</h6>
+                        <p class="form-text">権限・カテゴリーで対象を絞り込めます。指定しない項目は全員が対象です。マスター管理者には常に送信されます。</p>
+                        @if(Auth::user()->role === 'master_admin')
                             <label class="form-label">送信対象の権限</label>
                             <div class="form-check">
                                 <input class="form-check-input"
@@ -163,14 +166,33 @@
                                     学年管理者のみに送信・表示する
                                 </label>
                             </div>
-                            <div class="form-text">
-                                未選択の場合は通常どおり対象学年の一般ユーザーにも表示されます
+                            <div class="form-text mb-3">
+                                未選択の場合は対象学年の一般ユーザーにも表示・送信されます。設定はイベントの表示範囲にも適用されます。
                             </div>
                             @error('target_roles')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                <div class="text-danger small mb-2">{{ $message }}</div>
                             @enderror
+                        @endif
+
+                        <label class="form-label">カテゴリー</label>
+                        <div class="row">
+                            @forelse($categories as $category)
+                                <div class="col-md-6 form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="target_category_{{ $category->id }}"
+                                           name="target_category_ids[]"
+                                           value="{{ $category->id }}"
+                                           {{ in_array($category->id, old('target_category_ids', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="target_category_{{ $category->id }}">
+                                        {{ $category->name }}
+                                    </label>
+                                </div>
+                            @empty
+                                <div class="col-12 text-muted small">有効なカテゴリーがありません</div>
+                            @endforelse
                         </div>
-                    @endif
+                    </div>
 
                     <!-- LINE通知 -->
                     <div class="mb-4 p-3 rounded border border-info bg-light">

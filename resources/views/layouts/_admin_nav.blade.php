@@ -27,6 +27,9 @@
         <i class="bi bi-newspaper"></i> ニュース管理
     </a>
     @if(Auth::check() && Auth::user()->role === 'master_admin')
+        <a class="nav-link text-white {{ request()->routeIs('admin.categories.create') ? 'active' : '' }}" href="{{ route('admin.categories.create') }}">
+            <i class="bi bi-tag"></i> カテゴリー作成
+        </a>
         <a class="nav-link text-white {{ request()->routeIs('admin.registration-status.*') ? 'active' : '' }}" href="{{ route('admin.registration-status.index') }}">
             <i class="bi bi-bar-chart"></i> 登録状況
         </a>
