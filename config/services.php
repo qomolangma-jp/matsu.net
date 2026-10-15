@@ -40,6 +40,8 @@ return [
         'liff_id' => env('LIFF_ID'),
         // LIFFアプリを紐付けているLINEログインチャネルのID（IDトークン検証用）
         'login_channel_id' => env('LINE_LOGIN_CHANNEL_ID'),
+        'login_channel_secret' => env('LINE_LOGIN_CHANNEL_SECRET'),
+        'login_redirect_uri' => env('LINE_LOGIN_REDIRECT_URI'),
     ],
 
 ];

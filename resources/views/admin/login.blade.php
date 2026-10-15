@@ -41,6 +41,18 @@
                 </div>
             @endif
 
+            <a href="{{ route('line.login.redirect', ['redirect' => request('redirect', '/mypage')]) }}"
+               class="btn btn-lg w-100 text-white mb-3"
+               style="background-color: #06c755;">
+                <i class="bi bi-line me-2"></i>LINEでログイン
+            </a>
+
+            <div class="d-flex align-items-center gap-3 mb-3 text-muted small">
+                <hr class="flex-grow-1 my-0">
+                <span>またはメールアドレスでログイン</span>
+                <hr class="flex-grow-1 my-0">
+            </div>
+
             <form method="POST" action="{{ route('admin.login') }}">
                 @csrf
 

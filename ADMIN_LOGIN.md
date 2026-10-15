@@ -1,5 +1,20 @@
 # 松高.net 管理画面アクセス方法
 
+## LINEログイン
+PCブラウザでは `/admin/login` または `/login` を開くとLINEログイン画面が表示されます。スマートフォンでは従来のメールアドレス・パスワード画面にLINEログインボタンが追加で表示されます。どちらの端末でも、LINEボタンからLINE認証を利用できます。
+
+LIFF経由ですでに登録済みのユーザーは、LINEログイン側で使用するLINEログインチャネルが登録時と同じであれば、同じLINEユーザーIDで認証されログインできます。別のチャネルを使うとLINEユーザーIDが異なるため、既存アカウントに紐付きません。
+
+LINE Developersコンソールで、LIFFと同じLINEログインチャネルに `openid` スコープを有効にし、コールバックURLを登録してください。環境変数には次を設定します。
+
+```dotenv
+LINE_LOGIN_CHANNEL_ID=LINEログインチャネルID
+LINE_LOGIN_CHANNEL_SECRET=LINEログインチャネルシークレット
+LINE_LOGIN_REDIRECT_URI=https://公開ドメイン/auth/line/callback
+```
+
+`LINE_LOGIN_REDIRECT_URI` はLINE Developersコンソールに登録したURLと完全一致させてください。設定後は設定キャッシュを利用している環境で `php artisan config:cache` を再実行します。ログイン対象ユーザーの `line_id` は、LIFFで登録したLINEユーザーIDと同じチャネルの値である必要があります。
+
 ## 1. テストログインページにアクセス
 ブラウザで以下のURLを開く:
 ```

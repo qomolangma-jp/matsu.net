@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RegistrationStatusController;
 use App\Http\Controllers\PasswordReissueController;
+use App\Http\Controllers\LineLoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,6 +61,12 @@ Route::get('/admin', function () {
 Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('admin.login.form');
 Route::post('/admin/login', [LoginController::class, 'login'])->middleware('throttle:10,1')->name('admin.login');
 Route::post('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
+Route::get('/auth/line/redirect', [LineLoginController::class, 'redirectToLine'])
+    ->middleware('throttle:20,1')
+    ->name('line.login.redirect');
+Route::get('/auth/line/callback', [LineLoginController::class, 'handleCallback'])
+    ->middleware('throttle:20,1')
+    ->name('line.login.callback');
 
 // ログイン画面（デフォルトリダイレクト用）
 Route::get('/login', function () {

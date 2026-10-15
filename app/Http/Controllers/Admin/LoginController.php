@@ -9,10 +9,14 @@ use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
         if (Auth::check() && in_array(Auth::user()->role, ['master_admin', 'year_admin'])) {
             return redirect()->route('admin.users.index');
+        }
+
+        if (!$this->isMobileBrowser($request->userAgent() ?? '')) {
+            return view('auth.line-login');
         }
 
         return view('admin.login');
@@ -50,5 +54,10 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('admin.login.form');
+    }
+
+    private function isMobileBrowser(string $userAgent): bool
+    {
+        return (bool) preg_match('/iPhone|iPod|iPad|Android.*Mobile|Windows Phone|webOS|BlackBerry|Opera Mini/i', $userAgent);
     }
 }
